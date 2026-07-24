@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:menulab.com)",
+      "WebFetch(domain:www.menulab.com)",
+      "Bash(npm init *)",
+      "Bash(npm install *)",
+      "Bash(npx playwright *)",
+      "Bash(npx tsx *)",
+      "Bash(grep -o '\"items\":\\\\[.\\\\{0,200\\\\}' captures/benden-karakoy/dom.html)",
+      "Bash(python3 *)",
+      "Bash(npx --yes create-next-app@latest /tmp/claude-1000/-home-zayn-Downloads-Code-MenuProject/d9bee736-9bc9-41ff-9c80-abd545ba0457/scratchpad/menuapp-scaffold --ts --tailwind --eslint --app --no-src-dir --import-alias @/* --use-npm --yes)",
+      "Bash(git init *)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"=== tsc exit: $? ===\")",
+      "Bash(npm run *)"
+    ]
+  }
+}

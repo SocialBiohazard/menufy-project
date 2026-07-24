@@ -1,0 +1,205 @@
+// MenuApp schema — Part 2 §2 data model.
+// One premium template rendered per restaurant; visual identity is driven by
+// the `theme*` palette fields below (they map 1:1 to the reference platform's
+// --menu-* CSS variables discovered in reference/captures/*/dom.html).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  // Prisma 7: connection URLs are NOT set here. Migrate/CLI reads the URL from
+  // prisma.config.ts (DIRECT_URL); the runtime PrismaClient uses a driver
+  // adapter with the pooled DATABASE_URL (see lib/prisma).
+  provider = "postgresql"
+}
+
+enum NavigationStyle {
+  DRILLDOWN
+  ACCORDION
+}
+
+model Restaurant {
+  id           String  @id @default(cuid())
+  slug         String  @unique
+  businessName String
+  businessType String?
+
+  // --- Phase 1.5 queue: nullable, not built into MVP UI yet ---
+  phone            String?
+  email            String?
+  whatsappNumber   String?
+  websiteUrl       String?
+  address          String?
+  city             String?
+  district         String?
+  workingHours     Json?
+  instagramUrl     String?
+  tiktokUrl        String?
+  googleMapsUrl    String?
+  googleReviewsUrl String?
+  kdvNotice        String?
+  kdvNoticeEn      String?
+  kdvNoticeAr      String?
+  allergenNotice   String?
+  allergenNoticeEn String?
+  allergenNoticeAr String?
+  nutritionNotice   String?
+  nutritionNoticeEn String?
+  nutritionNoticeAr String?
+  slogan           String?
+  sloganEn         String?
+  sloganAr         String?
+  establishedYear  Int?
+  currencyCode     String @default("TRY")
+  attributionText  String?
+  attributionUrl   String?
+  // ------------------------------------------------------------
+
+  logo       String?
+  coverImage String?
+  splashImage   String?
+  splashEnabled Boolean @default(false)
+
+  // Optional custom host such as menu.example.com. The application still
+  // keeps /[slug] available as an operator preview/fallback URL.
+  publicHostname String? @unique
+  lastPriceChangeAt DateTime?
+
+  templateType String // key into the code-level template registry
+
+  // Palette knobs — the whole theming system. Map to --menu-* CSS variables.
+  themeAccent     String? // --menu-accent
+  themePrimary    String? // --menu-primary
+  themeSecondary  String? // --menu-secondary
+  themeBackground String? // --menu-background
+  themeBorder     String? // --menu-border
+  themeText       String? // --menu-text
+
+  categoryNavigationStyle NavigationStyle @default(DRILLDOWN)
+  darkMode                Boolean         @default(true)
+
+  defaultLang  String   @default("tr")
+  enabledLangs String[] @default(["tr", "en", "ar"])
+
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories    Category[]
+  menuSchedules MenuSchedule[]
+}
+
+model Category {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  name   String
+  nameEn String?
+  nameAr String?
+
+  imageUrl  String?
+  sortOrder Int     @default(0)
+  sortGroup String? // present, unused in MVP UI — deferred grouping feature
+
+  items Item[]
+
+  @@index([restaurantId])
+}
+
+model Item {
+  id         String   @id @default(cuid())
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  name          String
+  nameEn        String?
+  nameAr        String?
+  description   String?
+  descriptionEn String?
+  descriptionAr String?
+
+  price       Int // whole currency units (reference stores TRY as whole lira)
+  portionGrams Int?
+  imageUrl    String?
+  ingredients String? // TR only, freeform
+
+  isNew       Boolean @default(false)
+  isFeatured  Boolean @default(false)
+  isAvailable Boolean @default(true) // the "86" toggle
+  hasAlcohol  Boolean @default(false)
+  hasPork     Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  allergens ItemAllergen[]
+  nutrition Nutrition?
+  variants  Variant[] // schema stub — not exposed in MVP builder/diner UI
+
+  @@index([categoryId])
+}
+
+model Allergen {
+  id     Int            @id // 1–14, Turkish allergen regulation, pre-seeded
+  nameTr String
+  nameEn String
+  nameAr String
+  icon   String // emoji
+  items  ItemAllergen[]
+}
+
+model ItemAllergen {
+  itemId     String
+  allergenId Int
+  item       Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  allergen   Allergen @relation(fields: [allergenId], references: [id])
+
+  @@id([itemId, allergenId])
+  @@index([allergenId])
+}
+
+model Nutrition {
+  id     String @id @default(cuid())
+  itemId String @unique
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  energyKcal   Int?
+  protein      Float?
+  fat          Float?
+  saturatedFat Float?
+  carbohydrate Float?
+  sugar        Float?
+  fiber        Float?
+  saltG        Float?
+  basis        String? // "100g" | "100ml" | "per portion"
+  isEstimated  Boolean @default(false)
+}
+
+model Variant {
+  id     String @id @default(cuid())
+  itemId String
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  label     String
+  labelEn   String?
+  labelAr   String?
+  price     Int
+  sortOrder Int    @default(0)
+
+  @@index([itemId])
+}
+
+model MenuSchedule {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  name        String // e.g. "Breakfast", "Dinner"
+  daysOfWeek  Int[] // 0–6
+  startTime   String // "07:00"
+  endTime     String // "11:00"
+  categoryIds String[] // categories active during this window
+
+  @@index([restaurantId])
+}
