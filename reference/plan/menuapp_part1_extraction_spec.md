@@ -30,7 +30,7 @@ Do **not** send Playwright hunting for an admin panel. It isn't there. The admin
 - **Themes:** content/presentation split; ≥3 selectable themes. How *distinct* the 3 are is decided *after* extraction (§5.12).
 
 **MVP feature scope (locked):** operator login (single) → build/manage restaurants + menus (categories → flat priced items, **images**, **allergens**, content in **TR/EN/AR**) → **draft/publish** → assign a **theme** → per-item **availability toggle** + **menu scheduling** → generate **QR** → public slug menu page for diners. No restaurant auth, no ordering/payments, no variants/modifiers, no import, no analytics.
-- **Stack:** Next.js + Supabase (Postgres + Auth + Storage + RLS) + Supabase MCP in Claude Code; hosting on Railway optional.
+- **Stack:** Next.js + PostgreSQL via Prisma + database-backed authentication + local/S3-compatible media storage; hosted on Railway.
 
 ---
 
@@ -147,7 +147,7 @@ The numbered items below are the original framing (the `[DECIDE]` tags are now r
 
 3. **[DECIDE] Multilingual is *content* i18n, which is harder than UI i18n.** menulab does TR/EN/AR *per menu item* (each item needs a name + description per language). This must be in the data model from the start — retrofitting it is painful. **Which languages for MVP?** My default: TR + EN, structured so AR (and others) drop in later.
 
-4. **[DECIDE] Item images.** Menus have item photos → you need Supabase Storage + upload + image resizing, and some menus have 300+ items (real storage/perf load). **Images in MVP, or text-only menus first?**
+4. **[DECIDE] Item images.** Menus have item photos → you need object storage + upload + image resizing, and some menus have 300+ items (real storage/perf load). **Images in MVP, or text-only menus first?**
 
 5. **[DECIDE] Menu depth: variants & modifiers.** Categories → items is easy. But do items need **variants** (small/medium/large pricing) and **modifiers** (extras/add-ons)? These significantly complicate the data model and the builder UI. My default for MVP: **flat items with a single price, no modifiers** — add later.
 

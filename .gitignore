@@ -51,3 +51,6 @@ next-env.d.ts
 
 # Local development media storage
 /.data
+
+# Project-local PostgreSQL runtime and data
+/.local

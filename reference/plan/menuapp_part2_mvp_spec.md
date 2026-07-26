@@ -220,7 +220,7 @@ This is a starting hypothesis, not locked — the actual visual differentiation 
 
 ## 4. Operator build flow (designed by us — no reference to extract)
 
-Single shared operator login (Supabase Auth, no roles).
+Operator authentication is implemented with database-backed accounts and sessions.
 
 1. **Dashboard** — list of restaurants, publish status, quick links to public slug + QR.
 2. **Restaurant editor**
@@ -235,9 +235,9 @@ Single shared operator login (Supabase Auth, no roles).
 
 ## 5. Stack confirmation
 
-- Next.js (App Router) + Supabase: Postgres (via Prisma), Auth (single operator account), Storage (item/logo/cover images).
-- RLS: since there's one operator and no restaurant-side auth, RLS mainly needs to gate **public reads to published restaurants only** — unpublished drafts should 404 or show a placeholder to diners, never leak draft content.
-- Hosting: Railway, optional per original spec.
+- Next.js (App Router) + PostgreSQL via Prisma, database-backed operator/customer authentication, and local or S3-compatible media storage.
+- Application authorization gates operator, customer, and public access. Public diners only receive published snapshots; unpublished drafts remain private.
+- Hosting: Railway with Railway PostgreSQL and object storage.
 
 ---
 
@@ -261,4 +261,4 @@ Single shared operator login (Supabase Auth, no roles).
 
 ## 8. Next step
 
-Part 3 — implementation. Hand this doc + the Prisma schema to Claude Code, scaffold the Next.js/Supabase project, migrate the schema, seed the allergen table, then build dashboard → restaurant editor → menu builder → public slug page, in that order.
+Part 3 — implementation. Use this document with the Prisma schema, migrate PostgreSQL, seed the allergen table, then build dashboard → restaurant editor → menu builder → public slug page, in that order.

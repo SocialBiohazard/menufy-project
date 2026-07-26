@@ -17,6 +17,10 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-inci-preview": "tsx prisma/seed-inci-preview.ts",
     "db:studio": "prisma studio",
+    "db:local:start": "node scripts/local-postgres.mjs start",
+    "db:local:stop": "node scripts/local-postgres.mjs stop",
+    "db:local:status": "node scripts/local-postgres.mjs status",
+    "dev:local": "node scripts/local-postgres.mjs start && next dev",
     "create-operator": "tsx scripts/create-operator.ts"
   },
   "dependencies": {

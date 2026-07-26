@@ -38,6 +38,11 @@ npm run dev
 
 Set `OPERATOR_PASSWORD` in the shell before running `create-operator`; do not put an operator password in the repository. On Windows, copy `.env.example` using Explorer or PowerShell instead of `cp`.
 
+This workspace also has a project-local PostgreSQL runtime under the gitignored
+`.local` directory. Use `npm run db:local:start`, `npm run db:local:status`, and
+`npm run db:local:stop` to manage it, or `npm run dev:local` to start PostgreSQL
+before the development server.
+
 Local development defaults to media files under `.data/media`. Production uses a private S3-compatible bucket and the variables documented in `.env.example`.
 
 ## Quality checks

@@ -1,8 +1,8 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
 
-// Pooled connection (pgBouncer) for app runtime. Migrations use DIRECT_URL via
-// prisma.config.ts. See prisma/schema.prisma for the Prisma 7 rationale.
+// Runtime connection. Railway may supply a pooled URL; local development uses
+// the native PostgreSQL URL in .env. Migrations use DIRECT_URL via prisma.config.ts.
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 
 const globalForPrisma = globalThis as unknown as {
