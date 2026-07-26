@@ -7,6 +7,7 @@ import { DEFAULT_CATEGORIES } from "@/lib/default-menu";
 import { requireOperator } from "@/lib/auth";
 import { publicationIssues } from "@/lib/publication-readiness";
 import { THEMES } from "@/lib/themes";
+import { deleteManagedImages, replacedManagedImages } from "@/lib/media-storage";
 import {
   restaurantCreateSchema,
   restaurantCoreSchema,
@@ -82,8 +83,14 @@ export async function updateRestaurantCore(
 
   const current = await prisma.restaurant.findUnique({
     where: { id },
-    select: { slug: true },
+    select: { slug: true, logo: true, coverImage: true, splashImage: true },
   });
+
+  await deleteManagedImages(replacedManagedImages([
+    { previous: current?.logo, next: d.logo },
+    { previous: current?.coverImage, next: d.coverImage },
+    { previous: current?.splashImage, next: d.splashImage },
+  ]));
 
   await prisma.restaurant.update({
     where: { id },
@@ -194,10 +201,33 @@ export async function togglePublish(
 
 export async function deleteRestaurant(id: string): Promise<ActionResult> {
   await requireOperator();
+  const media = await prisma.restaurant.findUnique({
+    where: { id },
+    select: {
+      logo: true,
+      coverImage: true,
+      splashImage: true,
+      categories: {
+        select: {
+          imageUrl: true,
+          items: { select: { imageUrl: true } },
+        },
+      },
+    },
+  });
   const r = await prisma.restaurant.delete({
     where: { id },
     select: { slug: true },
   });
+  await deleteManagedImages([
+    media?.logo,
+    media?.coverImage,
+    media?.splashImage,
+    ...(media?.categories.flatMap((category) => [
+      category.imageUrl,
+      ...category.items.map((item) => item.imageUrl),
+    ]) ?? []),
+  ]);
   revalidatePath("/dashboard");
   revalidatePath(`/${r.slug}`);
   return { ok: true };

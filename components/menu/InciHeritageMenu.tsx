@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -19,6 +19,11 @@ import type { MenuData, MenuItem } from "@/lib/menu";
 import { formatPrice, isRtl, LANG_LABELS, pick, type Lang } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { themeToCssVars, type ThemeTokens } from "@/lib/themes";
+import {
+  readInciNavigation,
+  writeInciNavigation,
+  type InciNavigationView,
+} from "@/lib/inci-navigation";
 
 const COPY = {
   tr: {
@@ -42,6 +47,9 @@ const COPY = {
     since: "Kuruluş",
     empty: "Bu kategori yakında güncellenecek.",
     emptyMenu: "Menümüz hazırlanıyor. Çok yakında burada.",
+    unavailable: "Şu anda mevcut değil",
+    new: "Yeni",
+    featured: "Öne çıkan",
   },
   en: {
     enter: "Explore the menu",
@@ -64,6 +72,9 @@ const COPY = {
     since: "Since",
     empty: "This category will be updated soon.",
     emptyMenu: "Our menu is being prepared and will be here soon.",
+    unavailable: "Currently unavailable",
+    new: "New",
+    featured: "Featured",
   },
   ar: {
     enter: "استكشف القائمة",
@@ -86,6 +97,9 @@ const COPY = {
     since: "منذ",
     empty: "سيتم تحديث هذا القسم قريبًا.",
     emptyMenu: "يتم إعداد قائمتنا وستتوفر هنا قريبًا.",
+    unavailable: "غير متوفر حاليًا",
+    new: "جديد",
+    featured: "مميز",
   },
 } satisfies Record<Lang, Record<string, string>>;
 
@@ -126,15 +140,104 @@ export function InciHeritageMenu({
   const [entered, setEntered] = useState(!menu.splashEnabled);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const contentHeadingRef = useRef<HTMLHeadingElement>(null);
   const rtl = isRtl(lang);
   const t = COPY[lang];
   const themeStyle = themeToCssVars(theme);
 
-  const categories = menu.categories.filter((category) => category.items.length > 0);
+  const categories = menu.categories;
   const category = categories.find((entry) => entry.id === categoryId) ?? null;
   const logo = menu.logo;
   const background = menu.splashImage || menu.coverImage || FALLBACK_BACKGROUND;
   const slogan = pick(menu, "slogan", lang) || menu.businessType || "";
+  const categoryIndex = useMemo(
+    () => categories.map((entry) => ({
+      id: entry.id,
+      itemIds: entry.items.map((item) => item.id),
+    })),
+    [categories],
+  );
+
+  const applyView = useCallback((view: InciNavigationView) => {
+    setEntered(view.entered);
+    setCategoryId(view.categoryId);
+    setSelectedItem(
+      view.itemId
+        ? menu.categories.flatMap((entry) => entry.items).find((item) => item.id === view.itemId) ?? null
+        : null,
+    );
+    setLang(view.lang);
+  }, [menu.categories]);
+
+  const updateView = useCallback((
+    changes: Partial<InciNavigationView>,
+    mode: "push" | "replace" = "push",
+  ) => {
+    const current: InciNavigationView = {
+      entered,
+      categoryId,
+      itemId: selectedItem?.id ?? null,
+      lang,
+      ...changes,
+    };
+    const search = writeInciNavigation(
+      new URLSearchParams(window.location.search),
+      current,
+      defaultLang,
+    );
+    const depth = Number(window.history.state?.inciDepth ?? 0);
+    const state = { ...window.history.state, inciDepth: mode === "push" ? depth + 1 : depth };
+    window.history[mode === "push" ? "pushState" : "replaceState"](
+      state,
+      "",
+      `${window.location.pathname}${search}${window.location.hash}`,
+    );
+    applyView(current);
+  }, [applyView, categoryId, defaultLang, entered, lang, selectedItem?.id]);
+
+  const closeOneLevel = useCallback((fallback: Partial<InciNavigationView>) => {
+    const depth = Number(window.history.state?.inciDepth ?? 0);
+    if (depth > 0) {
+      window.history.back();
+    } else {
+      updateView(fallback, "replace");
+    }
+  }, [updateView]);
+
+  useEffect(() => {
+    const syncFromLocation = () => {
+      applyView(readInciNavigation(
+        new URLSearchParams(window.location.search),
+        categoryIndex,
+        enabledLangs,
+        defaultLang,
+        menu.splashEnabled,
+      ));
+    };
+    const initial = readInciNavigation(
+      new URLSearchParams(window.location.search),
+      categoryIndex,
+      enabledLangs,
+      defaultLang,
+      menu.splashEnabled,
+    );
+    window.history.replaceState(
+      { ...window.history.state, inciDepth: Number(window.history.state?.inciDepth ?? 0) },
+      "",
+      `${window.location.pathname}${writeInciNavigation(
+        new URLSearchParams(window.location.search),
+        initial,
+        defaultLang,
+      )}${window.location.hash}`,
+    );
+    queueMicrotask(() => applyView(initial));
+    window.addEventListener("popstate", syncFromLocation);
+    return () => window.removeEventListener("popstate", syncFromLocation);
+  }, [applyView, categoryIndex, defaultLang, enabledLangs, menu.splashEnabled]);
+
+  useEffect(() => {
+    if (entered) contentHeadingRef.current?.focus({ preventScroll: true });
+  }, [categoryId, entered]);
 
   if (!entered) {
     return (
@@ -145,7 +248,12 @@ export function InciHeritageMenu({
       >
         <Background image={background} />
         <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
-          <LanguageSwitch langs={enabledLangs} lang={lang} onChange={setLang} light />
+          <LanguageSwitch
+            langs={enabledLangs}
+            lang={lang}
+            onChange={(nextLang) => updateView({ lang: nextLang }, "replace")}
+            light
+          />
           <div className="mt-5 flex size-32 items-center justify-center rounded-full border border-[#d5a95d]/70 bg-[#fff8ea] p-2 text-[#681a27] shadow-[0_20px_70px_rgba(25,4,8,.52)] sm:mt-10 sm:size-40">
             {logo ? (
               <Image src={logo} alt={menu.businessName} width={152} height={152} priority className="size-28 rounded-full object-contain sm:size-36" />
@@ -168,7 +276,7 @@ export function InciHeritageMenu({
           )}
           {slogan && <p className="mt-3 max-w-sm text-sm leading-6 text-[#fff8ea]/76">{slogan}</p>}
           <button
-            onClick={() => setEntered(true)}
+            onClick={() => updateView({ entered: true })}
             className="mt-6 inline-flex min-h-12 items-center gap-3 rounded-full border border-[#f0d79f]/55 bg-[#d5a95d] px-7 text-sm font-bold text-[#3f1017] shadow-[0_12px_35px_rgba(33,6,11,.32)] transition hover:-translate-y-0.5 hover:bg-[#e2bd73] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#fff8ea] motion-reduce:transform-none sm:mt-10"
           >
             {t.enter}
@@ -186,7 +294,7 @@ export function InciHeritageMenu({
         <div className="relative z-10 mx-auto max-w-5xl">
           <div className="flex flex-col gap-3 min-[361px]:flex-row min-[361px]:items-start min-[361px]:justify-between">
             <button
-              onClick={() => setCategoryId(null)}
+              onClick={() => categoryId && closeOneLevel({ categoryId: null, itemId: null })}
               className="flex min-w-0 items-center gap-2.5 text-start"
               aria-label={t.categories}
             >
@@ -202,13 +310,22 @@ export function InciHeritageMenu({
                 <span className="mt-0.5 block text-[10px] uppercase tracking-[.24em] text-[#e7c784]">{t.menu}</span>
               </span>
             </button>
-            <LanguageSwitch langs={enabledLangs} lang={lang} onChange={setLang} light />
+            <LanguageSwitch
+              langs={enabledLangs}
+              lang={lang}
+              onChange={(nextLang) => updateView({ lang: nextLang }, "replace")}
+              light
+            />
           </div>
           <div className="mt-12 max-w-xl sm:mt-16">
             <p className="text-xs font-semibold uppercase tracking-[.26em] text-[#e7c784]">
               {category ? t.menu : t.categories}
             </p>
-            <h1 className="mt-2 font-display text-4xl font-semibold leading-tight sm:text-5xl">
+            <h1
+              ref={contentHeadingRef}
+              tabIndex={-1}
+              className="mt-2 font-display text-4xl font-semibold leading-tight outline-none sm:text-5xl"
+            >
               {category ? pick(category, "name", lang) : slogan || menu.businessName}
             </h1>
             {category && lang !== "tr" && pick(category, "name", lang) !== category.name && (
@@ -224,16 +341,28 @@ export function InciHeritageMenu({
             category={category}
             lang={lang}
             currencyCode={menu.currencyCode}
-            onBack={() => setCategoryId(null)}
-            onItem={setSelectedItem}
+            onBack={() => closeOneLevel({ categoryId: null, itemId: null })}
+            onItem={(item) => updateView({ itemId: item.id })}
           />
         ) : (
-          <CategoryGrid categories={categories} lang={lang} onSelect={setCategoryId} />
+          <CategoryGrid
+            categories={categories}
+            lang={lang}
+            onSelect={(nextCategoryId) => updateView({
+              categoryId: nextCategoryId,
+              itemId: null,
+            })}
+          />
         )}
       </main>
 
       <RestaurantFooter menu={menu} lang={lang} />
-      <ItemDetails item={selectedItem} lang={lang} menu={menu} onClose={() => setSelectedItem(null)} />
+      <ItemDetails
+        item={selectedItem}
+        lang={lang}
+        menu={menu}
+        onClose={() => closeOneLevel({ itemId: null })}
+      />
     </div>
   );
 }
@@ -310,7 +439,7 @@ function CategoryGrid({
             className="group relative min-h-48 overflow-hidden rounded-[1.4rem] bg-[#681a27] text-start shadow-[0_18px_50px_-30px_rgba(69,13,22,.8)] transition hover:-translate-y-1 hover:shadow-[0_24px_55px_-28px_rgba(69,13,22,.9)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#882634] motion-reduce:transform-none sm:min-h-72"
           >
             {image ? (
-              <Image src={image} alt="" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover transition duration-700 group-hover:scale-[1.03] motion-reduce:transform-none" />
+              <Image src={image} alt="" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover transition duration-700 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none" />
             ) : (
               <div className="absolute inset-0" style={{ background: CATEGORY_FALLBACKS[index % CATEGORY_FALLBACKS.length] }}>
                 <span className="absolute end-4 top-3 font-display text-6xl font-semibold text-[#fff4d9]/8 sm:text-7xl">
@@ -371,7 +500,7 @@ function CategoryView({
             >
               {item.imageUrl ? (
                 <div className="relative w-32 shrink-0 overflow-hidden sm:w-36">
-                  <Image src={item.imageUrl} alt="" fill sizes="144px" className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transform-none" />
+                  <Image src={item.imageUrl} alt="" fill sizes="144px" className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none" />
                 </div>
               ) : (
                 <div className="relative flex w-24 shrink-0 items-center justify-center overflow-hidden bg-[linear-gradient(145deg,#932d3e,#641722)] text-[#e3bd73]">
@@ -390,7 +519,14 @@ function CategoryView({
                 {pick(item, "description", lang) && (
                   <span className="mt-2 line-clamp-2 text-xs leading-5 text-[#77635f]">{pick(item, "description", lang)}</span>
                 )}
-                <span className="mt-auto pt-3 text-[10px] font-bold uppercase tracking-[.16em] text-[#b18439]">{t.details}</span>
+                <span className="mt-3 flex flex-wrap gap-1.5">
+                  {item.isNew && <StatusBadge>{t.new}</StatusBadge>}
+                  {item.isFeatured && <StatusBadge>{t.featured}</StatusBadge>}
+                  {!item.isAvailable && <StatusBadge>{t.unavailable}</StatusBadge>}
+                </span>
+                {item.isAvailable && (
+                  <span className="mt-auto pt-3 text-[10px] font-bold uppercase tracking-[.16em] text-[#b18439]">{t.details}</span>
+                )}
               </span>
             </button>
           ))}
@@ -566,6 +702,14 @@ function RestaurantFooter({ menu, lang }: { menu: MenuData; lang: Lang }) {
         )}
       </div>
     </footer>
+  );
+}
+
+function StatusBadge({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded-full bg-[#882634]/8 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-[#882634]">
+      {children}
+    </span>
   );
 }
 

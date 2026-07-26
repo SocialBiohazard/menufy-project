@@ -1,5 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { updateSession } from "@/utils/supabase/middleware";
+import {
+  isTenantPassthroughPath,
+  isTenantRestrictedPath,
+} from "@/lib/tenant-routing";
 
 function hostnameOf(value: string | undefined): string | null {
   if (!value) return null;
@@ -24,17 +27,23 @@ function isMainApplicationHost(hostname: string) {
   );
 }
 
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const hostname = (request.headers.get("host") || "").split(":")[0].toLowerCase();
 
   if (hostname && !isMainApplicationHost(hostname)) {
+    if (isTenantRestrictedPath(request.nextUrl.pathname)) {
+      return new NextResponse(null, { status: 404 });
+    }
+    if (isTenantPassthroughPath(request.nextUrl.pathname)) {
+      return NextResponse.next({ request });
+    }
     const url = request.nextUrl.clone();
     url.pathname = `/tenant-host/${encodeURIComponent(hostname)}`;
     url.search = "";
     return NextResponse.rewrite(url);
   }
 
-  return updateSession(request);
+  return NextResponse.next({ request });
 }
 
 export const config = {

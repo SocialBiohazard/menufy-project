@@ -21,7 +21,12 @@ export function QrDialog({ slug, name, publicHostname }: { slug: string; name: s
     const base =
       process.env.NEXT_PUBLIC_SITE_URL ||
       (typeof window !== "undefined" ? window.location.origin : "");
-    return publicMenuUrl({ slug, publicHostname, applicationOrigin: base });
+    return publicMenuUrl({
+      slug,
+      publicHostname,
+      applicationOrigin: base,
+      preferApplicationOrigin: process.env.NODE_ENV === "development",
+    });
   }
 
   async function generate() {

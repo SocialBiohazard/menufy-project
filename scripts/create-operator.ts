@@ -1,39 +1,51 @@
 import "dotenv/config";
 
-// One-off: create the single operator account via the Supabase Auth Admin REST
-// API (using fetch, so it works in bare Node without the SDK's WebSocket dep).
-// Usage: npx tsx scripts/create-operator.ts <email> <password>
+import { hashPassword, passwordValidationError } from "../lib/auth-password";
+import { isOperatorEmail } from "../lib/operator-access";
+import { prisma } from "../lib/prisma";
+
+// Creates or resets an operator in the application database.
+// Prefer OPERATOR_PASSWORD so the password does not appear in shell history:
+// OPERATOR_PASSWORD="..." npm run create-operator -- developer@example.com
 async function main() {
-  const email = process.argv[2];
-  const password = process.argv[3];
+  const email = process.argv[2]?.trim().toLowerCase();
+  const password = process.env.OPERATOR_PASSWORD ?? process.argv[3];
   if (!email || !password) {
-    console.error("Usage: npx tsx scripts/create-operator.ts <email> <password>");
-    process.exit(1);
+    console.error(
+      "Usage: set OPERATOR_PASSWORD securely, then run npm run create-operator -- <email>",
+    );
+    process.exitCode = 1;
+    return;
+  }
+  if (!isOperatorEmail(email)) {
+    console.error("Email must also be present in OPERATOR_EMAILS.");
+    process.exitCode = 1;
+    return;
+  }
+  const validationError = passwordValidationError(password);
+  if (validationError) {
+    console.error(validationError);
+    process.exitCode = 1;
+    return;
   }
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const secret = process.env.SUPABASE_SECRET_KEY;
-  if (!url || !secret || secret.includes("<paste")) {
-    console.error("Set SUPABASE_SECRET_KEY in .env first.");
-    process.exit(1);
-  }
-
-  const res = await fetch(`${url}/auth/v1/admin/users`, {
-    method: "POST",
-    headers: {
-      apikey: secret,
-      Authorization: `Bearer ${secret}`,
-      "Content-Type": "application/json",
+  const passwordHash = await hashPassword(password);
+  const operator = await prisma.operator.upsert({
+    where: { email },
+    create: { email, passwordHash },
+    update: {
+      passwordHash,
+      isActive: true,
+      sessions: { deleteMany: {} },
     },
-    body: JSON.stringify({ email, password, email_confirm: true }),
+    select: { email: true },
   });
-
-  const body = await res.json();
-  if (!res.ok) {
-    console.error("Failed:", body.msg ?? body.error_description ?? JSON.stringify(body));
-    process.exit(1);
-  }
-  console.log("✓ Operator account created:", body.email ?? email);
+  console.log(`Operator ready: ${operator.email}`);
 }
 
-main();
+main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  })
+  .finally(() => prisma.$disconnect());

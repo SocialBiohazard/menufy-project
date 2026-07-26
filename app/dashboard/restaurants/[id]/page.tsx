@@ -26,7 +26,12 @@ export default async function RestaurantEditorPage({
   const { id } = await params;
   const r = await prisma.restaurant.findUnique({ where: { id } });
   if (!r) notFound();
-  const publicHref = publicMenuUrl({ slug: r.slug, publicHostname: r.publicHostname });
+  const publicHref = publicMenuUrl({
+    slug: r.slug,
+    publicHostname: r.publicHostname,
+    applicationOrigin: process.env.NEXT_PUBLIC_SITE_URL,
+    preferApplicationOrigin: process.env.NODE_ENV === "development",
+  });
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">

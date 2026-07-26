@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireOperator } from "@/lib/auth";
 import { itemSchema, type ItemInput } from "@/lib/validation";
+import { deleteManagedImages, replacedManagedImages } from "@/lib/media-storage";
 
 type Result<T = undefined> =
   | { ok: true; data: T }
@@ -106,6 +107,10 @@ export async function updateItem(id: string, input: ItemInput) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid" };
   }
   const d = parsed.data;
+  const current = await prisma.item.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
 
   // Reset allergens, then re-add.
   await prisma.itemAllergen.deleteMany({ where: { itemId: id } });
@@ -131,6 +136,9 @@ export async function updateItem(id: string, input: ItemInput) {
     data: scalarData(d),
     include: itemInclude,
   });
+  await deleteManagedImages(replacedManagedImages([
+    { previous: current?.imageUrl, next: d.imageUrl },
+  ]));
 
   await revalidateForCategory(item.categoryId);
   return { ok: true as const, data: item };
@@ -139,6 +147,7 @@ export async function updateItem(id: string, input: ItemInput) {
 export async function deleteItem(id: string): Promise<Result> {
   await requireOperator();
   const item = await prisma.item.delete({ where: { id } });
+  await deleteManagedImages([item.imageUrl]);
   await revalidateForCategory(item.categoryId);
   return { ok: true, data: undefined };
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
-import { uploadImage } from "@/lib/actions/media";
+import { discardUploadedImage, uploadImage } from "@/lib/actions/media";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
@@ -21,7 +21,15 @@ export function ImageField({
   label?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const sessionUploadRef = useRef<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  useEffect(() => {
+    return () => {
+      const uploaded = sessionUploadRef.current;
+      if (uploaded) void discardUploadedImage(uploaded);
+    };
+  }, []);
 
   function onFile(file: File) {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
@@ -39,7 +47,12 @@ export function ImageField({
     startTransition(async () => {
       const res = await uploadImage(fd);
       if (!res.ok) toast.error(res.error);
-      else onChange(res.url);
+      else {
+        const previousSessionUpload = sessionUploadRef.current;
+        sessionUploadRef.current = res.url;
+        if (previousSessionUpload) void discardUploadedImage(previousSessionUpload);
+        onChange(res.url);
+      }
     });
   }
 
@@ -76,7 +89,12 @@ export function ImageField({
               size="sm"
               variant="ghost"
               className="text-destructive"
-              onClick={() => onChange("")}
+              onClick={() => {
+                const uploaded = sessionUploadRef.current;
+                sessionUploadRef.current = null;
+                if (uploaded) void discardUploadedImage(uploaded);
+                onChange("");
+              }}
             >
               <X className="size-4" />
               Remove

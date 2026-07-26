@@ -48,3 +48,6 @@ next-env.d.ts
 
 # Local preview screenshots
 /previews
+
+# Local development media storage
+/.data

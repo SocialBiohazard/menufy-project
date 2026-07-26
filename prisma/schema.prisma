@@ -91,6 +91,29 @@ model Restaurant {
   menuSchedules MenuSchedule[]
 }
 
+model Operator {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions OperatorSession[]
+}
+
+model OperatorSession {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  operatorId String
+  operator   Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([operatorId])
+  @@index([expiresAt])
+}
+
 model Category {
   id           String     @id @default(cuid())
   restaurantId String

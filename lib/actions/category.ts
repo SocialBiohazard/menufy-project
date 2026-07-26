@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireOperator } from "@/lib/auth";
 import { categorySchema, type CategoryInput } from "@/lib/validation";
+import { deleteManagedImages, replacedManagedImages } from "@/lib/media-storage";
 
 type Result<T = undefined> =
   | { ok: true; data: T }
@@ -48,6 +49,10 @@ export async function updateCategory(id: string, input: CategoryInput) {
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid" };
   }
+  const current = await prisma.category.findUnique({
+    where: { id },
+    select: { imageUrl: true },
+  });
   const category = await prisma.category.update({
     where: { id },
     data: {
@@ -57,13 +62,23 @@ export async function updateCategory(id: string, input: CategoryInput) {
       imageUrl: parsed.data.imageUrl || null,
     },
   });
+  await deleteManagedImages(replacedManagedImages([
+    { previous: current?.imageUrl, next: parsed.data.imageUrl },
+  ]));
   await revalidateRestaurant(category.restaurantId);
   return { ok: true as const, data: category };
 }
 
 export async function deleteCategory(id: string): Promise<Result> {
   await requireOperator();
-  const category = await prisma.category.delete({ where: { id } });
+  const category = await prisma.category.delete({
+    where: { id },
+    include: { items: { select: { imageUrl: true } } },
+  });
+  await deleteManagedImages([
+    category.imageUrl,
+    ...category.items.map((item) => item.imageUrl),
+  ]);
   await revalidateRestaurant(category.restaurantId);
   return { ok: true, data: undefined };
 }

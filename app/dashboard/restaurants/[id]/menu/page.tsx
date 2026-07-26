@@ -22,6 +22,8 @@ export default async function MenuBuilderPage({
   const publicHref = publicMenuUrl({
     slug: restaurant.slug,
     publicHostname: restaurant.publicHostname,
+    applicationOrigin: process.env.NEXT_PUBLIC_SITE_URL,
+    preferApplicationOrigin: process.env.NODE_ENV === "development",
   });
 
   return (

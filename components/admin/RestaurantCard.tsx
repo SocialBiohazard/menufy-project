@@ -40,6 +40,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
   const publicHref = publicMenuUrl({
     slug: restaurant.slug,
     publicHostname: restaurant.publicHostname,
+    preferApplicationOrigin: process.env.NODE_ENV === "development",
   });
 
   function onTogglePublish(next: boolean) {

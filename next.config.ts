@@ -7,8 +7,6 @@ const nextConfig: NextConfig = {
       // Sample/demo imagery.
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "picsum.photos" },
-      // Supabase Storage (item/logo/cover uploads) — bucket public URLs.
-      { protocol: "https", hostname: "vweokfgpyfbjxyqbjnea.supabase.co" },
     ],
   },
   async headers() {
