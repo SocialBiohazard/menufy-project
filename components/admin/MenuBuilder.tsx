@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 export function MenuBuilder({
   restaurantId,
@@ -55,6 +56,7 @@ export function MenuBuilder({
   initialCategories: BuilderCategory[];
   allergens: AllergenOption[];
 }) {
+  const { t } = usePanelI18n();
   const [categories, setCategories] = useState(initialCategories);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialCategories[0]?.id ?? null,
@@ -181,7 +183,7 @@ export function MenuBuilder({
       <aside className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-muted-foreground">
-            Categories
+            {t("Categories")}
           </h2>
           <Button
             size="xs"
@@ -189,13 +191,13 @@ export function MenuBuilder({
             onClick={() => setCatDialog({ open: true })}
           >
             <Plus className="size-3.5" />
-            Add
+            {t("Add")}
           </Button>
         </div>
 
         {categories.length === 0 && (
           <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            No categories yet.
+            {t("No categories yet.")}
           </p>
         )}
 
@@ -260,7 +262,7 @@ export function MenuBuilder({
         {!selected ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-dashed py-16 text-center text-muted-foreground">
             <UtensilsCrossed className="size-8" />
-            <p>Select or create a category to add items.</p>
+            <p>{t("Select or create a category to add items.")}</p>
           </div>
         ) : (
           <>
@@ -268,13 +270,13 @@ export function MenuBuilder({
               <h2 className="font-semibold">{selected.name}</h2>
               <Button size="sm" onClick={() => setItemDialog({ open: true })}>
                 <Plus className="size-4" />
-                Add item
+                {t("Add item")}
               </Button>
             </div>
 
             {selected.items.length === 0 ? (
               <p className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-                No items in this category yet.
+                {t("No items in this category yet.")}
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
@@ -317,8 +319,8 @@ export function MenuBuilder({
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span className="truncate text-sm font-medium">{it.name}</span>
-                        {it.isNew && <Badge variant="secondary" className="text-[10px]">New</Badge>}
-                        {it.isFeatured && <Badge variant="secondary" className="text-[10px]">Featured</Badge>}
+                        {it.isNew && <Badge variant="secondary" className="text-[10px]">{t("New")}</Badge>}
+                        {it.isFeatured && <Badge variant="secondary" className="text-[10px]">{t("Featured")}</Badge>}
                       </div>
                       <span className="text-sm text-muted-foreground">
                         {formatPrice(it.price)}
@@ -390,6 +392,7 @@ function ConfirmDelete({
   ariaLabel: string;
   onConfirm: () => void;
 }) {
+  const { t } = usePanelI18n();
   return (
     <AlertDialog>
       <AlertDialogTrigger
@@ -412,12 +415,12 @@ function ConfirmDelete({
           )}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-white hover:bg-destructive/90"
           >
-            Delete
+            {t("Delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

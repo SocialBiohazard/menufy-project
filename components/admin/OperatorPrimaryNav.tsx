@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Building2, Store } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 const items = [
   {
@@ -23,6 +24,7 @@ const items = [
 
 export function OperatorPrimaryNav() {
   const pathname = usePathname();
+  const { t } = usePanelI18n();
 
   return (
     <nav
@@ -45,7 +47,7 @@ export function OperatorPrimaryNav() {
             )}
           >
             <Icon className="size-4" />
-            {item.label}
+            {t(item.label)}
           </Link>
         );
       })}

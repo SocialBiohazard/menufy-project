@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useTransition } from "react";
+import { useEffect, useId, useRef, useTransition } from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { discardUploadedImage, uploadImage } from "@/lib/actions/media";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 export function ImageField({
   value,
@@ -20,9 +21,11 @@ export function ImageField({
   kind?: string;
   label?: string;
 }) {
+  const { t } = usePanelI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionUploadRef = useRef<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const inputId = useId();
 
   useEffect(() => {
     return () => {
@@ -33,11 +36,11 @@ export function ImageField({
 
   function onFile(file: File) {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      toast.error("Use a PNG, JPEG, or WebP image");
+      toast.error(t("Use a PNG, JPEG, or WebP image"));
       return;
     }
     if (file.size > 8 * 1024 * 1024) {
-      toast.error("Image must be smaller than 8 MB");
+      toast.error(t("Image must be smaller than 8 MB"));
       return;
     }
     const fd = new FormData();
@@ -60,7 +63,7 @@ export function ImageField({
 
   return (
     <div className="flex flex-col gap-2">
-      <Label>{label}</Label>
+      <Label>{t(label)}</Label>
       <div className="flex items-center gap-3">
         <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
           {value ? (
@@ -77,13 +80,13 @@ export function ImageField({
         </div>
         <div className="flex flex-col gap-1.5">
           <Button
-            type="button"
             size="sm"
             variant="outline"
             disabled={pending}
-            onClick={() => inputRef.current?.click()}
+            nativeButton={false}
+            render={<label htmlFor={inputId} />}
           >
-            {value ? "Replace" : "Upload"}
+            {t(value ? "Replace" : "Upload")}
           </Button>
           {value && (
             <Button
@@ -99,15 +102,16 @@ export function ImageField({
               }}
             >
               <X className="size-4" />
-              Remove
+              {t("Remove")}
             </Button>
           )}
         </div>
         <input
+          id={inputId}
           ref={inputRef}
           type="file"
           accept="image/png,image/jpeg,image/webp"
-          className="hidden"
+          className="sr-only"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) onFile(file);

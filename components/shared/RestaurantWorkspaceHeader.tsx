@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -9,6 +11,7 @@ import {
 import { QrDialog } from "@/components/admin/QrDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 export function RestaurantWorkspaceHeader({
   id,
@@ -29,6 +32,7 @@ export function RestaurantWorkspaceHeader({
   mode: "operator" | "customer";
   current: "settings" | "menu";
 }) {
+  const { t } = usePanelI18n();
   const root =
     mode === "operator"
       ? `/dashboard/restaurants/${id}`
@@ -42,17 +46,17 @@ export function RestaurantWorkspaceHeader({
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        {mode === "operator" ? "All restaurants" : "Restaurant overview"}
+        {t(mode === "operator" ? "All restaurants" : "Restaurant overview")}
       </Link>
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Restaurant workspace
+              {t("Restaurant workspace")}
             </p>
             <Badge variant={isPublished ? "default" : "secondary"}>
-              {isPublished ? "Live" : "Draft"}
+              {t(isPublished ? "Live" : "Draft")}
             </Badge>
           </div>
           <h1 className="truncate text-2xl font-semibold sm:text-3xl">{name}</h1>
@@ -68,7 +72,7 @@ export function RestaurantWorkspaceHeader({
             render={<Link href={`/portal-preview/${id}`} target="_blank" />}
           >
             <Eye className="size-4" />
-            Preview draft
+            {t("Preview draft")}
           </Button>
           {isPublished && (
             <Button
@@ -78,14 +82,14 @@ export function RestaurantWorkspaceHeader({
               render={<a href={publicHref} target="_blank" rel="noreferrer" />}
             >
               <ExternalLink className="size-4" />
-              View live
+              {t("View live")}
             </Button>
           )}
         </div>
       </div>
 
       <nav
-        aria-label={`${name} workspace`}
+        aria-label={`${name} ${t("workspace")}`}
         className="flex gap-1 overflow-x-auto rounded-lg border bg-background p-1"
       >
         <Button
@@ -95,7 +99,7 @@ export function RestaurantWorkspaceHeader({
           render={<Link href={root} aria-current={current === "settings" ? "page" : undefined} />}
         >
           <Settings className="size-4" />
-          Settings
+          {t("Settings")}
         </Button>
         <Button
           size="sm"
@@ -104,7 +108,7 @@ export function RestaurantWorkspaceHeader({
           render={<Link href={`${root}/menu`} aria-current={current === "menu" ? "page" : undefined} />}
         >
           <LayoutList className="size-4" />
-          Menu builder
+          {t("Menu builder")}
         </Button>
       </nav>
     </header>

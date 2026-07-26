@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireCustomerUser } from "@/lib/customer-auth";
 import { prisma } from "@/lib/prisma";
+import { getPanelI18n } from "@/lib/panel-i18n";
 
 type SetupStep = {
   title: string;
@@ -27,6 +28,7 @@ type SetupStep = {
 
 export default async function CustomerWelcomePage() {
   const customer = await requireCustomerUser();
+  const { t } = await getPanelI18n();
   const editableRestaurantIds = customer.memberships
     .filter((membership) => membership.role !== "VIEWER")
     .map((membership) => membership.restaurantId);
@@ -41,10 +43,10 @@ export default async function CustomerWelcomePage() {
   return (
     <div className="space-y-8">
       <div>
-        <Badge variant="secondary" className="mb-3">Welcome to Menufy</Badge>
-        <h1 className="text-3xl font-semibold">Let’s get your menu ready</h1>
+        <Badge variant="secondary" className="mb-3">{t("Welcome to Menufy")}</Badge>
+        <h1 className="text-3xl font-semibold">{t("Let’s get your menu ready")}</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Follow these steps in order. Your live menu will not change until you explicitly publish.
+          {t("Follow these steps in order. Your live menu will not change until you explicitly publish.")}
         </p>
       </div>
 
@@ -59,52 +61,52 @@ export default async function CustomerWelcomePage() {
         );
         const steps: SetupStep[] = [
           {
-            title: "Account activated",
-            description: "Your secure customer access is ready.",
+            title: t("Account activated"),
+            description: t("Your secure customer access is ready."),
             complete: true,
             href: "/portal/account",
-            action: "View account",
+            action: t("View account"),
             icon: UserRoundCheck,
           },
           {
-            title: "Confirm restaurant details",
-            description: "Add contact details, address, hours, links, and notices.",
+            title: t("Confirm restaurant details"),
+            description: t("Add contact details, address, hours, links, and notices."),
             complete: hasDetails,
             href: `/portal/restaurants/${restaurant.id}#restaurant-details`,
-            action: "Edit details",
+            action: t("Edit details"),
             icon: Store,
           },
           {
-            title: "Add your branding",
-            description: "Upload the restaurant logo and optional imagery.",
+            title: t("Add your branding"),
+            description: t("Upload the restaurant logo and optional imagery."),
             complete: hasBranding,
             href: `/portal/restaurants/${restaurant.id}#branding`,
-            action: "Add branding",
+            action: t("Add branding"),
             icon: ImageIcon,
           },
           {
-            title: "Build the menu",
-            description: "Create categories, products, prices, translations, and dietary details.",
+            title: t("Build the menu"),
+            description: t("Create categories, products, prices, translations, and dietary details."),
             complete: hasMenu,
             href: `/portal/restaurants/${restaurant.id}/menu`,
-            action: "Open menu builder",
+            action: t("Open menu builder"),
             icon: LayoutList,
           },
           {
-            title: "Preview the draft",
-            description: "Review exactly how the current draft looks before publishing.",
+            title: t("Preview the draft"),
+            description: t("Review exactly how the current draft looks before publishing."),
             complete: hasMenu,
             href: `/portal-preview/${restaurant.id}`,
-            action: "Preview draft",
+            action: t("Preview draft"),
             icon: Eye,
             external: true,
           },
           {
-            title: "Publish",
-            description: "Make the reviewed draft available to diners.",
+            title: t("Publish"),
+            description: t("Make the reviewed draft available to diners."),
             complete: restaurant.isPublished,
             href: "/portal",
-            action: "Review and publish",
+            action: t("Review and publish"),
             icon: Rocket,
           },
         ];
@@ -117,10 +119,10 @@ export default async function CustomerWelcomePage() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <CardTitle>{restaurant.businessName}</CardTitle>
-                  <p className="mt-1 text-sm text-muted-foreground">{completed} of {steps.length} steps complete</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{completed} / {steps.length} {t("steps complete")}</p>
                 </div>
                 <Badge variant={restaurant.isPublished ? "default" : "outline"}>
-                  {restaurant.isPublished ? "Live" : "Setup in progress"}
+                  {t(restaurant.isPublished ? "Live" : "Setup in progress")}
                 </Badge>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
@@ -138,7 +140,7 @@ export default async function CustomerWelcomePage() {
                         {step.complete ? <Check className="size-4" /> : isNext ? <Icon className="size-4" /> : <Circle className="size-4" />}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2"><p className="font-medium">{index + 1}. {step.title}</p>{isNext && <Badge>Next</Badge>}</div>
+                        <div className="flex items-center gap-2"><p className="font-medium">{index + 1}. {step.title}</p>{isNext && <Badge>{t("Next")}</Badge>}</div>
                         <p className="text-sm text-muted-foreground">{step.description}</p>
                       </div>
                       <Button size="sm" variant={isNext ? "default" : "outline"} nativeButton={false} render={<Link href={step.href} target={step.external ? "_blank" : undefined} />}>
@@ -152,7 +154,7 @@ export default async function CustomerWelcomePage() {
           </Card>
         );
       })}
-      {!restaurants.length && <div className="rounded-lg border border-dashed p-8 text-center"><p className="text-muted-foreground">Your access is read-only, or no editable restaurant is assigned.</p><Button className="mt-3" variant="outline" nativeButton={false} render={<Link href="/portal" />}>Go to overview</Button></div>}
+      {!restaurants.length && <div className="rounded-lg border border-dashed p-8 text-center"><p className="text-muted-foreground">{t("Your access is read-only, or no editable restaurant is assigned.")}</p><Button className="mt-3" variant="outline" nativeButton={false} render={<Link href="/portal" />}>{t("Go to overview")}</Button></div>}
     </div>
   );
 }

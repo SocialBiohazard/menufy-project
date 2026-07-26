@@ -3,7 +3,10 @@ import { UtensilsCrossed } from "lucide-react";
 import { requireOperator } from "@/lib/auth";
 import { OperatorPrimaryNav } from "@/components/admin/OperatorPrimaryNav";
 import { SignOutButton } from "@/components/admin/SignOutButton";
+import { PanelI18nProvider } from "@/components/shared/PanelI18nProvider";
+import { PanelLanguageSwitcher } from "@/components/shared/PanelLanguageSwitcher";
 import { Toaster } from "@/components/ui/sonner";
+import { getPanelLocale } from "@/lib/panel-i18n";
 
 export default async function DashboardLayout({
   children,
@@ -11,8 +14,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireOperator();
+  const locale = await getPanelLocale();
 
   return (
+    <PanelI18nProvider locale={locale}>
     <div className="min-h-dvh bg-muted/30">
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="mx-auto flex min-h-16 max-w-7xl flex-wrap items-center gap-x-6 px-4">
@@ -22,6 +27,7 @@ export default async function DashboardLayout({
           </Link>
           <OperatorPrimaryNav />
           <div className="ml-auto flex min-w-0 items-center gap-2">
+            <PanelLanguageSwitcher compact />
             <span className="hidden max-w-52 truncate text-sm text-muted-foreground lg:inline">
               {user.email}
             </span>
@@ -32,5 +38,6 @@ export default async function DashboardLayout({
       <main className="mx-auto max-w-7xl px-4 py-6 md:py-8">{children}</main>
       <Toaster richColors position="top-center" />
     </div>
+    </PanelI18nProvider>
   );
 }

@@ -8,6 +8,7 @@ import { ImageField } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ export function CategoryDialog({
   editing?: BuilderCategory;
   onSaved: (cat: SavedCategory) => void;
 }) {
+  const { t } = usePanelI18n();
   const [pending, startTransition] = useTransition();
   const [name, setName] = useState(editing?.name ?? "");
   const [nameEn, setNameEn] = useState(editing?.nameEn ?? "");
@@ -66,7 +68,7 @@ export function CategoryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit category" : "New category"}</DialogTitle>
+          <DialogTitle>{t(editing ? "Edit category" : "New category")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <ImageField
@@ -96,7 +98,7 @@ export function CategoryDialog({
           </div>
           <DialogFooter>
             <Button type="submit" disabled={pending || !name}>
-              {pending ? "Saving…" : "Save"}
+              {pending ? t("Saving…") : t("Save")}
             </Button>
           </DialogFooter>
         </form>

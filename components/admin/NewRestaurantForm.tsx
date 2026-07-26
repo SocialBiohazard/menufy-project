@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 const themeOptions = Object.entries(THEMES).map(([id, t]) => ({
   value: id,
@@ -23,6 +24,7 @@ const themeOptions = Object.entries(THEMES).map(([id, t]) => ({
 }));
 
 export function NewRestaurantForm() {
+  const { t } = usePanelI18n();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [businessName, setBusinessName] = useState("");
@@ -49,7 +51,7 @@ export function NewRestaurantForm() {
         toast.error(res.error);
         return;
       }
-      toast.success("Restaurant created");
+      toast.success(t("Restaurant created"));
       router.push(`/dashboard/restaurants/${res.data!.id}`);
     });
   }
@@ -57,7 +59,7 @@ export function NewRestaurantForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="businessName">Business name</Label>
+        <Label htmlFor="businessName">{t("Business name")}</Label>
         <Input
           id="businessName"
           required
@@ -68,7 +70,7 @@ export function NewRestaurantForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="slug">Slug (public URL)</Label>
+        <Label htmlFor="slug">{t("Slug (public URL)")}</Label>
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <span>/</span>
           <Input
@@ -85,7 +87,7 @@ export function NewRestaurantForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="businessType">Business type (optional)</Label>
+        <Label htmlFor="businessType">{t("Business type (optional)")}</Label>
         <Input
           id="businessType"
           value={businessType}
@@ -95,10 +97,10 @@ export function NewRestaurantForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label>Template</Label>
+        <Label>{t("Template")}</Label>
         <Select value={templateType} onValueChange={(v) => setTemplateType(v ?? "")}>
           <SelectTrigger>
-            <SelectValue placeholder="Choose a template" />
+            <SelectValue placeholder={t("Choose a template")} />
           </SelectTrigger>
           <SelectContent>
             {themeOptions.map((o) => (
@@ -111,7 +113,7 @@ export function NewRestaurantForm() {
       </div>
 
       <Button type="submit" disabled={pending || !businessName || !slug}>
-        {pending ? "Creating…" : "Create restaurant"}
+        {pending ? t("Creating…") : t("Create restaurant")}
       </Button>
     </form>
   );

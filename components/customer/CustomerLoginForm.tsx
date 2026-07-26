@@ -8,8 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PanelLanguageSwitcher } from "@/components/shared/PanelLanguageSwitcher";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 export function CustomerLoginForm({ message }: { message?: string }) {
+  const { t } = usePanelI18n();
   const [state, action, pending] = useActionState(loginCustomer, { error: null });
   return (
     <div className="flex min-h-dvh items-center justify-center bg-muted/40 p-4">
@@ -18,34 +21,34 @@ export function CustomerLoginForm({ message }: { message?: string }) {
           <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-foreground text-background">
             <Building2 className="size-5" />
           </div>
-          <CardTitle className="text-2xl">Restaurant portal</CardTitle>
-          <CardDescription>Manage your menu, brand, and restaurant information.</CardDescription>
+          <CardTitle className="text-2xl">{t("Restaurant portal")}</CardTitle>
+          <CardDescription>{t("Manage your menu, brand, and restaurant information.")}</CardDescription>
+          <div className="pt-2"><PanelLanguageSwitcher /></div>
         </CardHeader>
         <CardContent>
           <form action={action} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="customer-email">Email</Label>
+              <Label htmlFor="customer-email">{t("Email")}</Label>
               <Input id="customer-email" name="email" type="email" autoComplete="email" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customer-password">Password</Label>
+              <Label htmlFor="customer-password">{t("Password")}</Label>
               <Input id="customer-password" name="password" type="password" autoComplete="current-password" required />
             </div>
-            {message && <p className="text-sm text-emerald-700">{message}</p>}
+            {message && <p className="text-sm text-emerald-700">{t(message)}</p>}
             {state.error && <p role="alert" className="text-sm text-destructive">{state.error}</p>}
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? "Signing in…" : "Sign in"}
+              {pending ? t("Signing in…") : t("Sign in")}
             </Button>
           </form>
           <div className="mt-5 space-y-3 border-t pt-4 text-center text-sm text-muted-foreground">
             <p>
-              First visit? Open the activation link sent by your MenuApp
-              operator to choose a password.
+              {t("First visit? Open the activation link sent by your MenuApp operator to choose a password.")}
             </p>
             <p>
-              MenuApp staff?{" "}
+              {t("MenuApp staff?")}{" "}
               <Link href="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
-                Operator sign in
+                {t("Operator sign in")}
               </Link>
             </p>
           </div>

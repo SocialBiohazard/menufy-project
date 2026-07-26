@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 const LANG_LABEL: Record<Lang, string> = {
   tr: "Türkçe",
@@ -117,6 +118,7 @@ export function CoreEditorForm({
   restaurant: CoreFormData;
   customerMode?: boolean;
 }) {
+  const { t } = usePanelI18n();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [f, setF] = useState<CoreFormData>(restaurant);
@@ -194,7 +196,7 @@ export function CoreEditorForm({
         toast.error(res.error);
         return;
       }
-      toast.success("Saved");
+      toast.success(t("Saved"));
       router.refresh();
     });
   }
@@ -202,7 +204,7 @@ export function CoreEditorForm({
   return (
     <div className="flex flex-col gap-5">
       <nav
-        aria-label="Settings sections"
+        aria-label={t("Settings sections")}
         className="sticky top-[6.6rem] z-20 -mx-1 flex gap-1 overflow-x-auto rounded-lg border bg-background/95 p-1 shadow-sm backdrop-blur md:top-20"
       >
         {SETTINGS_SECTIONS.map((section) => (
@@ -211,7 +213,7 @@ export function CoreEditorForm({
             href={`#${section.id}`}
             className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            {section.label}
+              {t(section.label)}
           </a>
         ))}
       </nav>
@@ -219,11 +221,11 @@ export function CoreEditorForm({
       {/* Basics */}
       <Card id="basics" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Basics</CardTitle>
+          <CardTitle className="text-base">{t("Basics")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="businessName">Business name</Label>
+            <Label htmlFor="businessName">{t("Business name")}</Label>
             <Input
               id="businessName"
               value={f.businessName}
@@ -231,7 +233,7 @@ export function CoreEditorForm({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="slug">Slug</Label>
+            <Label htmlFor="slug">{t("Slug")}</Label>
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
               <span>/</span>
               <Input
@@ -243,7 +245,7 @@ export function CoreEditorForm({
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="businessType">Business type</Label>
+            <Label htmlFor="businessType">{t("Business type")}</Label>
             <Input
               id="businessType"
               value={f.businessType}
@@ -252,7 +254,7 @@ export function CoreEditorForm({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Template</Label>
+            <Label>{t("Template")}</Label>
             <Select
               value={f.templateType}
               onValueChange={(v) => set("templateType", v ?? f.templateType)}
@@ -276,7 +278,7 @@ export function CoreEditorForm({
       {/* Branding */}
       <Card id="branding" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Branding</CardTitle>
+          <CardTitle className="text-base">{t("Branding")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-6">
@@ -314,7 +316,7 @@ export function CoreEditorForm({
 
       <Card id="public-address" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Splash and public address</CardTitle>
+          <CardTitle className="text-base">{t("Splash and public address")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <label className="flex items-center gap-3 text-sm">
@@ -322,7 +324,7 @@ export function CoreEditorForm({
               checked={f.splashEnabled}
               onCheckedChange={(checked) => set("splashEnabled", Boolean(checked))}
             />
-            Show the branded welcome screen before the menu
+            {t("Show the branded welcome screen before the menu")}
           </label>
           <ImageField
             value={f.splashImage}
@@ -332,7 +334,7 @@ export function CoreEditorForm({
             label="Splash background (optional)"
           />
           <div className="flex flex-col gap-2">
-            <Label htmlFor="publicHostname">Custom hostname</Label>
+            <Label htmlFor="publicHostname">{t("Custom hostname")}</Label>
             <Input
               id="publicHostname"
               value={f.publicHostname}
@@ -341,7 +343,7 @@ export function CoreEditorForm({
               disabled={customerMode}
             />
             <p className="text-xs text-muted-foreground">
-              Hostname only—no protocol or path. DNS is configured separately.
+              {t("Hostname only—no protocol or path. DNS is configured separately.")}
             </p>
           </div>
         </CardContent>
@@ -349,7 +351,7 @@ export function CoreEditorForm({
 
       <Card id="restaurant-details" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Restaurant details</CardTitle>
+          <CardTitle className="text-base">{t("Restaurant details")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -374,7 +376,7 @@ export function CoreEditorForm({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address">{t("Address")}</Label>
             <Textarea id="address" value={f.address} onChange={(e) => set("address", e.target.value)} rows={2} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -393,7 +395,7 @@ export function CoreEditorForm({
 
       <Card id="menu-notices" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Menu notices</CardTitle>
+          <CardTitle className="text-base">{t("Menu notices")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <LocalizedTextareas
@@ -418,14 +420,14 @@ export function CoreEditorForm({
             onChange={(index, value) => set((["nutritionNotice", "nutritionNoticeEn", "nutritionNoticeAr"] as const)[index], value)}
           />
           <p className="text-xs text-muted-foreground">
-            Leave notices and dates blank when the restaurant has not supplied or approved the facts.
+            {t("Leave notices and dates blank when the restaurant has not supplied or approved the facts.")}
           </p>
         </CardContent>
       </Card>
 
       <Card id="footer-attribution" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Footer attribution</CardTitle>
+          <CardTitle className="text-base">{t("Footer attribution")}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field
@@ -442,7 +444,7 @@ export function CoreEditorForm({
             type="url"
           />
           <p className="text-xs text-muted-foreground sm:col-span-2">
-            Optional. Leave the text blank to hide attribution.
+            {t("Optional. Leave the text blank to hide attribution.")}
           </p>
         </CardContent>
       </Card>
@@ -450,11 +452,11 @@ export function CoreEditorForm({
       {/* Languages */}
       <Card id="languages" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Languages</CardTitle>
+          <CardTitle className="text-base">{t("Languages")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            <Label>Enabled languages</Label>
+            <Label>{t("Enabled languages")}</Label>
             <div className="flex flex-wrap gap-4">
               {(["tr", "en", "ar"] as Lang[]).map((l) => (
                 <label key={l} className="flex items-center gap-2 text-sm">
@@ -468,7 +470,7 @@ export function CoreEditorForm({
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Default language</Label>
+            <Label>{t("Default language")}</Label>
             <Select
               value={f.defaultLang}
               onValueChange={(v) => v && set("defaultLang", v as Lang)}
@@ -491,11 +493,11 @@ export function CoreEditorForm({
       {/* Navigation */}
       <Card id="appearance" className="scroll-mt-36">
         <CardHeader>
-          <CardTitle className="text-base">Navigation</CardTitle>
+          <CardTitle className="text-base">{t("Navigation")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-2">
-            <Label>Category navigation style</Label>
+            <Label>{t("Category navigation style")}</Label>
             <Select
               value={f.categoryNavigationStyle}
               onValueChange={(v) =>
@@ -506,8 +508,8 @@ export function CoreEditorForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="DRILLDOWN">Drilldown (sticky tabs)</SelectItem>
-                <SelectItem value="ACCORDION">Accordion</SelectItem>
+                <SelectItem value="DRILLDOWN">{t("Drilldown (sticky tabs)")}</SelectItem>
+                <SelectItem value="ACCORDION">{t("Accordion")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -517,11 +519,11 @@ export function CoreEditorForm({
       {/* Palette overrides */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Colors (optional)</CardTitle>
+          <CardTitle className="text-base">{t("Colors (optional)")}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <p className="text-sm text-muted-foreground">
-            Override the template&apos;s palette. Unchecked = use the template default.
+            {t("Override the template's palette. Unchecked = use the template default.")}
           </p>
           {OVERRIDES.map((o) => {
             const val = f[o.key] as string;
@@ -552,7 +554,7 @@ export function CoreEditorForm({
 
       <div className="sticky bottom-4 flex justify-end">
         <Button onClick={onSave} disabled={pending} size="lg" className="shadow-lg">
-          {pending ? "Saving…" : "Save changes"}
+          {pending ? t("Saving…") : t("Save changes")}
         </Button>
       </div>
     </div>
@@ -572,10 +574,11 @@ function Field({
   placeholder?: string;
   type?: React.HTMLInputTypeAttribute;
 }) {
+  const { t } = usePanelI18n();
   const id = `field-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>{t(label)}</Label>
       <Input type={type} id={id} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </div>
   );
@@ -590,10 +593,11 @@ function LocalizedTextareas({
   values: [string, string, string];
   onChange: (index: number, value: string) => void;
 }) {
+  const { t } = usePanelI18n();
   const placeholders = ["Türkçe", "English", "العربية"];
   return (
     <div className="flex flex-col gap-2">
-      <Label>{label}</Label>
+      <Label>{t(label)}</Label>
       {values.map((value, index) => (
         <Textarea
           key={placeholders[index]}

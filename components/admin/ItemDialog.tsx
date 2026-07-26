@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -76,6 +77,7 @@ export function ItemDialog({
   editing?: BuilderItem;
   onSaved: (item: BuilderItem) => void;
 }) {
+  const { t } = usePanelI18n();
   const [pending, startTransition] = useTransition();
   const [f, setF] = useState<FormState>(() => stateFor(editing));
 
@@ -135,7 +137,7 @@ export function ItemDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{editing ? "Edit item" : "New item"}</DialogTitle>
+          <DialogTitle>{t(editing ? "Edit item" : "New item")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
           <ImageField
@@ -154,7 +156,7 @@ export function ItemDialog({
           />
 
           <div className="flex flex-col gap-2">
-            <Label>Description</Label>
+            <Label>{t("Description")}</Label>
             <Textarea value={f.description} onChange={(e) => set("description", e.target.value)} placeholder="Türkçe" rows={2} />
             <Textarea value={f.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} placeholder="English" rows={2} />
             <Textarea value={f.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} placeholder="العربية" dir="rtl" rows={2} />
@@ -162,7 +164,7 @@ export function ItemDialog({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="price">Price (₺)</Label>
+              <Label htmlFor="price">{t("Price (₺)")}</Label>
               <Input
                 id="price"
                 inputMode="numeric"
@@ -172,7 +174,7 @@ export function ItemDialog({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="portionGrams">Portion (g)</Label>
+              <Label htmlFor="portionGrams">{t("Portion (g)")}</Label>
               <Input
                 id="portionGrams"
                 inputMode="numeric"
@@ -183,13 +185,13 @@ export function ItemDialog({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="ingredients">Ingredients (TR)</Label>
+            <Label htmlFor="ingredients">{t("Ingredients (TR)")}</Label>
             <Input id="ingredients" value={f.ingredients} onChange={(e) => set("ingredients", e.target.value)} />
           </div>
 
           {/* Allergens */}
           <div className="flex flex-col gap-2">
-            <Label>Allergens</Label>
+            <Label>{t("Allergens")}</Label>
             <div className="flex flex-wrap gap-1.5">
               {allergens.map((a) => {
                 const on = f.allergenIds.includes(a.id);
@@ -226,7 +228,7 @@ export function ItemDialog({
           {/* Nutrition (optional) */}
           <div className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <Label className="text-muted-foreground">Nutrition (optional)</Label>
+              <Label className="text-muted-foreground">{t("Nutrition (optional)")}</Label>
               <label className="flex items-center gap-2 text-xs text-muted-foreground">
                 Estimated
                 <Switch checked={f.nutritionEstimated} onCheckedChange={(v) => set("nutritionEstimated", v)} />
@@ -243,24 +245,24 @@ export function ItemDialog({
               <NumField label="Salt" value={f.saltG} onChange={(v) => set("saltG", v)} />
             </div>
             <div className="flex flex-col gap-1">
-              <Label htmlFor="nutritionBasis" className="text-xs text-muted-foreground">Basis</Label>
+              <Label htmlFor="nutritionBasis" className="text-xs text-muted-foreground">{t("Basis")}</Label>
               <select
                 id="nutritionBasis"
                 value={f.nutritionBasis}
                 onChange={(e) => set("nutritionBasis", e.target.value)}
                 className="h-9 rounded-md border bg-background px-3 text-sm"
               >
-                <option value="">Not specified</option>
-                <option value="per portion">Per portion</option>
-                <option value="100g">Per 100 g</option>
-                <option value="100ml">Per 100 ml</option>
+                <option value="">{t("Not specified")}</option>
+                <option value="per portion">{t("Per portion")}</option>
+                <option value="100g">{t("Per 100 g")}</option>
+                <option value="100ml">{t("Per 100 ml")}</option>
               </select>
             </div>
           </div>
 
           <DialogFooter>
             <Button type="submit" disabled={pending || !f.name || f.price === ""}>
-              {pending ? "Saving…" : "Save item"}
+              {pending ? t("Saving…") : t("Save item")}
             </Button>
           </DialogFooter>
         </form>

@@ -9,20 +9,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
 const initialManagement = { error: null, activationPath: null };
 
 export function ChangePasswordForm() {
+  const { t } = usePanelI18n();
   const [state, action, pending] = useActionState(changeCustomerPassword, { error: null });
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Change password</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("Change password")}</CardTitle></CardHeader>
       <CardContent>
         <form action={action} className="space-y-3">
-          <div className="space-y-1"><Label htmlFor="current-password">Current password</Label><Input id="current-password" name="currentPassword" type="password" required /></div>
-          <div className="space-y-1"><Label htmlFor="new-password">New password</Label><Input id="new-password" name="newPassword" type="password" minLength={10} required /></div>
+          <div className="space-y-1"><Label htmlFor="current-password">{t("Current password")}</Label><Input id="current-password" name="currentPassword" type="password" required /></div>
+          <div className="space-y-1"><Label htmlFor="new-password">{t("New password")}</Label><Input id="new-password" name="newPassword" type="password" minLength={10} required /></div>
           {state.error && <p className="text-sm text-destructive">{state.error}</p>}
-          <Button type="submit" disabled={pending}>Update password</Button>
+          <Button type="submit" disabled={pending}>{t("Update password")}</Button>
         </form>
       </CardContent>
     </Card>
@@ -34,31 +36,32 @@ export function InviteStaffForm({
 }: {
   restaurants: Array<{ id: string; businessName: string }>;
 }) {
+  const { t } = usePanelI18n();
   const [state, action, pending] = useActionState(inviteCustomerStaff, initialManagement);
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Invite restaurant staff</CardTitle></CardHeader>
+      <CardHeader><CardTitle className="text-base">{t("Invite restaurant staff")}</CardTitle></CardHeader>
       <CardContent>
         <form action={action} className="space-y-3">
-          <div className="space-y-1"><Label htmlFor="staff-email">Email</Label><Input id="staff-email" name="email" type="email" required /></div>
+          <div className="space-y-1"><Label htmlFor="staff-email">{t("Email")}</Label><Input id="staff-email" name="email" type="email" required /></div>
           <div className="space-y-1">
-            <Label htmlFor="staff-restaurant">Restaurant</Label>
+            <Label htmlFor="staff-restaurant">{t("Restaurant")}</Label>
             <select id="staff-restaurant" name="restaurantId" className="h-9 w-full rounded-md border bg-background px-3 text-sm" required>
               {restaurants.map((restaurant) => <option key={restaurant.id} value={restaurant.id}>{restaurant.businessName}</option>)}
             </select>
           </div>
           <div className="space-y-1">
-            <Label htmlFor="staff-role">Role</Label>
+            <Label htmlFor="staff-role">{t("Role")}</Label>
             <select id="staff-role" name="role" className="h-9 w-full rounded-md border bg-background px-3 text-sm">
-              <option value="EDITOR">Editor</option>
-              <option value="VIEWER">Viewer</option>
-              <option value="OWNER">Owner</option>
+              <option value="EDITOR">{t("Editor")}</option>
+              <option value="VIEWER">{t("Viewer")}</option>
+              <option value="OWNER">{t("Owner")}</option>
             </select>
           </div>
           {state.error && <p className="text-sm text-destructive">{state.error}</p>}
           {state.activationPath && (
             <div className="space-y-3 rounded-md border bg-muted p-3 text-sm">
-              <p>Share this one-time activation link:</p>
+              <p>{t("Share this one-time activation link:")}</p>
               <a
                 className="block break-all font-mono text-primary underline"
                 href={state.activationPath}
@@ -74,11 +77,11 @@ export function InviteStaffForm({
                   variant="outline"
                   onClick={async () => {
                     await navigator.clipboard.writeText(state.activationPath!);
-                    toast.success("Activation link copied");
+                    toast.success(t("Activation link copied"));
                   }}
                 >
                   <Copy className="size-4" />
-                  Copy link
+                  {t("Copy link")}
                 </Button>
                 <Button
                   size="sm"
@@ -92,12 +95,12 @@ export function InviteStaffForm({
                   }
                 >
                   <ExternalLink className="size-4" />
-                  Open activation
+                  {t("Open activation")}
                 </Button>
               </div>
             </div>
           )}
-          <Button type="submit" disabled={pending}>{pending ? "Creating…" : "Create invitation"}</Button>
+          <Button type="submit" disabled={pending}>{pending ? t("Creating…") : t("Create invitation")}</Button>
         </form>
       </CardContent>
     </Card>

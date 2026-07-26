@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { QrDialog } from "@/components/admin/QrDialog";
+import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,7 @@ export interface RestaurantCardData {
 }
 
 export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData }) {
+  const { t } = usePanelI18n();
   const [published, setPublished] = useState(restaurant.isPublished);
   const [pending, startTransition] = useTransition();
   const publicHref = publicMenuUrl({
@@ -51,7 +53,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
         setPublished(!next);
         toast.error(res.error);
       } else {
-        toast.success(next ? "Published" : "Unpublished");
+        toast.success(t(next ? "Published" : "Unpublished"));
       }
     });
   }
@@ -60,7 +62,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
     startTransition(async () => {
       const res = await deleteRestaurant(restaurant.id);
       if (!res.ok) toast.error(res.error);
-      else toast.success("Restaurant deleted");
+      else toast.success(t("Restaurant deleted"));
     });
   }
 
@@ -83,15 +85,14 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
             </p>
           </div>
           <Badge variant={published ? "default" : "secondary"}>
-            {published ? "Live" : "Draft"}
+            {t(published ? "Live" : "Draft")}
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent className="flex-1">
         <p className="text-sm text-muted-foreground">
-          {restaurant.categoryCount} categor
-          {restaurant.categoryCount === 1 ? "y" : "ies"}
+          {restaurant.categoryCount} {t(restaurant.categoryCount === 1 ? "category" : "categories")}
         </p>
         <div className="mt-3 flex items-center gap-2">
           <Switch
@@ -101,7 +102,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
             disabled={pending}
           />
           <Label htmlFor={`pub-${restaurant.id}`} className="text-sm">
-            Published
+            {t("Published")}
           </Label>
         </div>
       </CardContent>
@@ -114,7 +115,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
           render={<Link href={`/dashboard/restaurants/${restaurant.id}/menu`} />}
         >
           <LayoutList className="size-4" />
-          Menu
+          {t("Menu")}
         </Button>
         <Button
           size="sm"
@@ -123,7 +124,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
           render={<Link href={`/dashboard/restaurants/${restaurant.id}`} />}
         >
           <Settings className="size-4" />
-          Settings
+          {t("Settings")}
         </Button>
         <QrDialog slug={restaurant.slug} name={restaurant.businessName} publicHostname={restaurant.publicHostname} />
         {published && (
@@ -136,7 +137,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
             }
           >
             <ExternalLink className="size-4" />
-            View
+            {t("View")}
           </Button>
         )}
         <AlertDialog>
@@ -161,12 +162,12 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantCardData 
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={onDelete}
                 className="bg-destructive text-white hover:bg-destructive/90"
               >
-                Delete
+                {t("Delete")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
