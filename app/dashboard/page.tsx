@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, UtensilsCrossed } from "lucide-react";
+import { Building2, Plus, UtensilsCrossed } from "lucide-react";
 import { listRestaurants } from "@/lib/admin-data";
 import { Button } from "@/components/ui/button";
 import { RestaurantCard } from "@/components/admin/RestaurantCard";
@@ -16,10 +16,16 @@ export default async function DashboardPage() {
             {restaurants.length} total
           </p>
         </div>
-        <Button nativeButton={false} render={<Link href="/dashboard/restaurants/new" />}>
-          <Plus className="size-4" />
-          New restaurant
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" nativeButton={false} render={<Link href="/dashboard/customers" />}>
+            <Building2 className="size-4" />
+            Customers
+          </Button>
+          <Button nativeButton={false} render={<Link href="/dashboard/restaurants/new" />}>
+            <Plus className="size-4" />
+            New restaurant
+          </Button>
+        </div>
       </div>
 
       {restaurants.length === 0 ? (

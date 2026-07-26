@@ -249,7 +249,7 @@ export function CoreEditorForm({
       </Card>
 
       {/* Branding */}
-      <Card>
+      <Card id="branding">
         <CardHeader>
           <CardTitle className="text-base">Branding</CardTitle>
         </CardHeader>
@@ -322,7 +322,7 @@ export function CoreEditorForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="restaurant-details">
         <CardHeader>
           <CardTitle className="text-base">Restaurant details</CardTitle>
         </CardHeader>

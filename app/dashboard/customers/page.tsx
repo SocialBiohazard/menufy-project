@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { ArrowLeft, Bell, Building2, Users } from "lucide-react";
-import { CustomerManagementForm } from "@/components/admin/CustomerManagementForm";
+import { ArrowLeft, Bell, Building2, Plus, Users } from "lucide-react";
 import {
   AssignRestaurantForm,
   CustomerAccountSettings,
 } from "@/components/admin/CustomerAccountControls";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOperator } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -42,15 +42,16 @@ export default async function CustomerManagementPage() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
         <Link href="/dashboard" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Dashboard</Link>
         <h1 className="text-2xl font-semibold">Customer workspaces</h1>
-        <p className="text-muted-foreground">Create access, assign locations, and control plan and infrastructure limits.</p>
+        <p className="text-muted-foreground">Manage existing accounts, access, locations, and limits.</p>
+        </div>
+        <Button nativeButton={false} render={<Link href="/dashboard/customers/new" />}>
+          <Plus className="size-4" /> Onboard customer
+        </Button>
       </div>
-      <section className="space-y-3">
-        <h2 className="font-semibold">New customer</h2>
-        <CustomerManagementForm restaurants={availableRestaurants} />
-      </section>
       {accounts.length > 0 && availableRestaurants.length > 0 && (
         <section className="space-y-3">
           <h2 className="font-semibold">Add a location</h2>

@@ -3,6 +3,7 @@ const PRIVATE_OR_SYSTEM_PREFIXES = [
   "/dashboard",
   "/login",
   "/portal",
+  "/portal-preview",
   "/activate",
 ] as const;
 

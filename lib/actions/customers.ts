@@ -20,7 +20,10 @@ function activationUrl(token: string) {
 const workspaceSchema = z.object({
   accountName: z.string().trim().min(2).max(120),
   email: z.email(),
-  restaurantId: z.string().min(1),
+  restaurantIds: z.array(z.string().min(1)).min(1),
+  plan: z.enum(["TRIAL", "BASIC", "PRO"]),
+  maxRestaurants: z.coerce.number().int().min(1).max(100),
+  maxStorageMb: z.coerce.number().int().min(100).max(1_000_000),
 });
 
 export async function createCustomerWorkspace(
@@ -31,7 +34,10 @@ export async function createCustomerWorkspace(
   const parsed = workspaceSchema.safeParse({
     accountName: formData.get("accountName"),
     email: formData.get("email"),
-    restaurantId: formData.get("restaurantId"),
+    restaurantIds: formData.getAll("restaurantIds"),
+    plan: formData.get("plan"),
+    maxRestaurants: formData.get("maxRestaurants"),
+    maxStorageMb: formData.get("maxStorageMb"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input", activationPath: null };
@@ -40,28 +46,46 @@ export async function createCustomerWorkspace(
     where: { email: parsed.data.email.toLowerCase() },
   });
   if (existingUser) return { error: "That email already has customer access", activationPath: null };
-  const restaurant = await prisma.restaurant.findUnique({
-    where: { id: parsed.data.restaurantId },
-    select: { customerAccountId: true },
+  if (parsed.data.maxRestaurants < parsed.data.restaurantIds.length) {
+    return {
+      error: "The location limit cannot be lower than the assigned locations",
+      activationPath: null,
+    };
+  }
+  const restaurants = await prisma.restaurant.findMany({
+    where: { id: { in: parsed.data.restaurantIds } },
+    select: { id: true, customerAccountId: true },
   });
-  if (!restaurant || restaurant.customerAccountId) {
-    return { error: "Restaurant is unavailable or already assigned", activationPath: null };
+  if (
+    restaurants.length !== parsed.data.restaurantIds.length ||
+    restaurants.some((restaurant) => restaurant.customerAccountId)
+  ) {
+    return { error: "One or more restaurants are unavailable or already assigned", activationPath: null };
   }
   const { token, tokenHash } = await generateInvitationToken();
   await prisma.$transaction(async (tx) => {
     const account = await tx.customerAccount.create({
-      data: { name: parsed.data.accountName },
+      data: {
+        name: parsed.data.accountName,
+        plan: parsed.data.plan,
+        maxRestaurants: parsed.data.maxRestaurants,
+        maxStorageBytes:
+          BigInt(parsed.data.maxStorageMb) * BigInt(1024) * BigInt(1024),
+      },
     });
-    await tx.restaurant.update({
-      where: { id: parsed.data.restaurantId },
+    const assignment = await tx.restaurant.updateMany({
+      where: { id: { in: parsed.data.restaurantIds }, customerAccountId: null },
       data: { customerAccountId: account.id },
     });
+    if (assignment.count !== parsed.data.restaurantIds.length) {
+      throw new Error("A restaurant was assigned by another request");
+    }
     await tx.customerInvitation.create({
       data: {
         tokenHash,
         email: parsed.data.email.toLowerCase(),
         role: "OWNER",
-        restaurantIds: [parsed.data.restaurantId],
+        restaurantIds: parsed.data.restaurantIds,
         customerAccountId: account.id,
         expiresAt: new Date(Date.now() + 7 * 86_400_000),
       },

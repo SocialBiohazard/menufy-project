@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { ExternalLink, LayoutList, Settings } from "lucide-react";
+import { ClipboardCheck, ExternalLink, LayoutList, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { togglePublish } from "@/lib/actions/restaurant";
 import { publicMenuUrl } from "@/lib/public-url";
@@ -70,6 +70,9 @@ export function CustomerRestaurantCard({
       <CardFooter className="flex flex-wrap gap-2">
         {canEdit && (
           <>
+            <Button size="sm" variant="ghost" nativeButton={false} render={<Link href="/portal/welcome" />}>
+              <ClipboardCheck className="size-4" /> Setup
+            </Button>
             <Button size="sm" variant="secondary" nativeButton={false} render={<Link href={`/portal/restaurants/${restaurant.id}/menu`} />}>
               <LayoutList className="size-4" /> Menu
             </Button>

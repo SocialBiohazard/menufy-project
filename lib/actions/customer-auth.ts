@@ -133,7 +133,7 @@ export async function activateCustomer(
     return created;
   });
   await createCustomerSession(user.id);
-  redirect("/portal");
+  redirect("/portal/welcome");
 }
 
 export async function changeCustomerPassword(

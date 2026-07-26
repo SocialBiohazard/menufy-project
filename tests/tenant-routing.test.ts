@@ -11,6 +11,7 @@ test("tenant hosts reject operator and system routes", () => {
   assert.equal(isTenantRestrictedPath("/login"), true);
   assert.equal(isTenantRestrictedPath("/portal"), true);
   assert.equal(isTenantRestrictedPath("/portal/account"), true);
+  assert.equal(isTenantRestrictedPath("/portal-preview/restaurant-id"), true);
   assert.equal(isTenantRestrictedPath("/activate/example-token"), true);
   assert.equal(isTenantRestrictedPath("/api/health"), true);
 });
