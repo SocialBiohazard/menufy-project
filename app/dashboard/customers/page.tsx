@@ -92,7 +92,23 @@ export default async function CustomerManagementPage() {
             </CardContent>
           </Card>
         ))}
-        {!accounts.length && <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">No customer workspaces yet.</p>}
+        {!accounts.length && (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <Users className="mx-auto size-8 text-muted-foreground" />
+            <p className="mt-3 font-medium">No customer workspaces yet</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Onboard the first customer and assign one or more restaurant locations.
+            </p>
+            <Button
+              className="mt-4"
+              nativeButton={false}
+              render={<Link href="/dashboard/customers/new" />}
+            >
+              <Plus className="size-4" />
+              Onboard first customer
+            </Button>
+          </div>
+        )}
       </section>
       {notifications.length > 0 && (
         <Card>

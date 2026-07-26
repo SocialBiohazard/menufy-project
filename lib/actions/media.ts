@@ -1,7 +1,6 @@
 "use server";
 
 import {
-  requireAuthenticatedActor,
   requireRestaurantAccess,
 } from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
@@ -60,11 +59,25 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
   }
 }
 
-export async function discardUploadedImage(value: string): Promise<void> {
-  await requireAuthenticatedActor();
-  if (!managedStoragePath(value)) return;
+export async function discardUploadedImage(
+  value: string,
+  restaurantSlug: string,
+): Promise<void> {
+  const storagePath = managedStoragePath(value);
+  if (!storagePath) return;
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { slug: restaurantSlug },
+    select: { id: true },
+  });
+  if (!restaurant) return;
+  await requireRestaurantAccess(restaurant.id, "EDITOR");
 
-  const [restaurant, category, item] = await Promise.all([
+  const safeSlug =
+    restaurantSlug.toLowerCase().replace(/[^a-z0-9-]/g, "-").slice(0, 80) ||
+    "misc";
+  if (!storagePath.startsWith(`${safeSlug}/`)) return;
+
+  const [restaurantReference, category, item] = await Promise.all([
     prisma.restaurant.findFirst({
       where: {
         OR: [
@@ -85,7 +98,7 @@ export async function discardUploadedImage(value: string): Promise<void> {
     }),
   ]);
 
-  if (!restaurant && !category && !item) {
+  if (!restaurantReference && !category && !item) {
     await deleteManagedImages([value]);
   }
 }

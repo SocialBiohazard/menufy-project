@@ -47,6 +47,16 @@ const OVERRIDES = [
   { key: "themeText", token: "text", label: "Text" },
 ] as const;
 
+const SETTINGS_SECTIONS = [
+  { id: "basics", label: "Basics" },
+  { id: "branding", label: "Branding" },
+  { id: "public-address", label: "Public address" },
+  { id: "restaurant-details", label: "Details" },
+  { id: "menu-notices", label: "Notices" },
+  { id: "languages", label: "Languages" },
+  { id: "appearance", label: "Appearance" },
+] as const;
+
 export interface CoreFormData {
   id: string;
   businessName: string;
@@ -191,8 +201,23 @@ export function CoreEditorForm({
 
   return (
     <div className="flex flex-col gap-5">
+      <nav
+        aria-label="Settings sections"
+        className="sticky top-[6.6rem] z-20 -mx-1 flex gap-1 overflow-x-auto rounded-lg border bg-background/95 p-1 shadow-sm backdrop-blur md:top-20"
+      >
+        {SETTINGS_SECTIONS.map((section) => (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {section.label}
+          </a>
+        ))}
+      </nav>
+
       {/* Basics */}
-      <Card>
+      <Card id="basics" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Basics</CardTitle>
         </CardHeader>
@@ -249,7 +274,7 @@ export function CoreEditorForm({
       </Card>
 
       {/* Branding */}
-      <Card id="branding">
+      <Card id="branding" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Branding</CardTitle>
         </CardHeader>
@@ -287,7 +312,7 @@ export function CoreEditorForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="public-address" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Splash and public address</CardTitle>
         </CardHeader>
@@ -322,7 +347,7 @@ export function CoreEditorForm({
         </CardContent>
       </Card>
 
-      <Card id="restaurant-details">
+      <Card id="restaurant-details" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Restaurant details</CardTitle>
         </CardHeader>
@@ -366,7 +391,7 @@ export function CoreEditorForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="menu-notices" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Menu notices</CardTitle>
         </CardHeader>
@@ -398,7 +423,7 @@ export function CoreEditorForm({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card id="footer-attribution" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Footer attribution</CardTitle>
         </CardHeader>
@@ -423,7 +448,7 @@ export function CoreEditorForm({
       </Card>
 
       {/* Languages */}
-      <Card>
+      <Card id="languages" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Languages</CardTitle>
         </CardHeader>
@@ -464,7 +489,7 @@ export function CoreEditorForm({
       </Card>
 
       {/* Navigation */}
-      <Card>
+      <Card id="appearance" className="scroll-mt-36">
         <CardHeader>
           <CardTitle className="text-base">Navigation</CardTitle>
         </CardHeader>

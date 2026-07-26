@@ -9,23 +9,34 @@ import { prisma } from "@/lib/prisma";
 
 export default async function CustomerAccountPage() {
   const customer = await requireCustomerUser();
+  const ownedRestaurants = customer.memberships
+    .filter((membership) => membership.role === "OWNER")
+    .map((membership) => membership.restaurantId);
   const [users, invitations] = await Promise.all([
     prisma.customerUser.findMany({
-      where: { accountId: customer.accountId },
+      where: {
+        accountId: customer.accountId,
+        memberships: {
+          some: { restaurantId: { in: ownedRestaurants } },
+        },
+      },
       include: {
-        memberships: { include: { restaurant: { select: { businessName: true } } } },
+        memberships: {
+          where: { restaurantId: { in: ownedRestaurants } },
+          include: { restaurant: { select: { businessName: true } } },
+        },
       },
       orderBy: { email: "asc" },
     }),
     prisma.customerInvitation.findMany({
-      where: { customerAccountId: customer.accountId },
+      where: {
+        customerAccountId: customer.accountId,
+        restaurantIds: { hasSome: ownedRestaurants },
+      },
       orderBy: { createdAt: "desc" },
       take: 20,
     }),
   ]);
-  const ownedRestaurants = customer.memberships
-    .filter((membership) => membership.role === "OWNER")
-    .map((membership) => membership.restaurantId);
   const restaurantChoices = await prisma.restaurant.findMany({
     where: { id: { in: ownedRestaurants } },
     select: { id: true, businessName: true },
@@ -42,18 +53,25 @@ export default async function CustomerAccountPage() {
         <ChangePasswordForm />
         {restaurantChoices.length > 0 && <InviteStaffForm restaurants={restaurantChoices} />}
       </div>
-      <Card>
-        <CardHeader><CardTitle className="text-base">People and access</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {users.map((user) => (
-            <div key={user.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 last:border-0">
-              <div><p className="font-medium">{user.name || user.email}</p>{user.name && <p className="text-sm text-muted-foreground">{user.email}</p>}</div>
-              <div className="flex flex-wrap gap-1">{user.memberships.map((membership) => <Badge key={membership.id} variant="secondary">{membership.restaurant.businessName}: {membership.role.toLowerCase()}</Badge>)}</div>
-            </div>
-          ))}
-          {!users.length && <p className="text-sm text-muted-foreground">No activated users.</p>}
-        </CardContent>
-      </Card>
+      {ownedRestaurants.length > 0 ? (
+        <Card>
+          <CardHeader><CardTitle className="text-base">People and access</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {users.map((user) => (
+              <div key={user.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 last:border-0">
+                <div><p className="font-medium">{user.name || user.email}</p>{user.name && <p className="text-sm text-muted-foreground">{user.email}</p>}</div>
+                <div className="flex flex-wrap gap-1">{user.memberships.map((membership) => <Badge key={membership.id} variant="secondary">{membership.restaurant.businessName}: {membership.role.toLowerCase()}</Badge>)}</div>
+              </div>
+            ))}
+            {!users.length && <p className="text-sm text-muted-foreground">No activated users for the locations you own.</p>}
+          </CardContent>
+        </Card>
+      ) : (
+        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+          Team management is available to restaurant owners. Your personal
+          password can still be changed above.
+        </p>
+      )}
       {invitations.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="text-base">Invitation history</CardTitle></CardHeader>

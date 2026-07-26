@@ -5,6 +5,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createCustomerSession, deleteCustomerSession, requireCustomerUser } from "@/lib/customer-auth";
 import { hashPassword, passwordValidationError, verifyPassword } from "@/lib/auth-password";
+import {
+  clearLoginFailures,
+  isLoginBlocked,
+  recordLoginFailure,
+} from "@/lib/login-rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export type CustomerAuthState = { error: string | null };
@@ -24,6 +29,10 @@ export async function loginCustomer(
   });
   if (!parsed.success) return { error: "Invalid email or password" };
   const email = parsed.data.email.trim().toLowerCase();
+  const rateLimitKey = `customer:${email}`;
+  if (isLoginBlocked(rateLimitKey)) {
+    return { error: "Too many attempts. Try again in 15 minutes." };
+  }
   const user = await prisma.customerUser.findUnique({
     where: { email },
     include: { account: true },
@@ -33,8 +42,10 @@ export async function loginCustomer(
     !user.account.isActive ||
     !(await verifyPassword(parsed.data.password, user.passwordHash))
   ) {
+    recordLoginFailure(rateLimitKey);
     return { error: "Invalid email or password" };
   }
+  clearLoginFailures(rateLimitKey);
   await prisma.customerSession.deleteMany({
     where: { expiresAt: { lte: new Date() } },
   });

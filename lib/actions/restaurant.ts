@@ -114,12 +114,11 @@ export async function updateRestaurantCore(
     where: { id },
     select: { slug: true, logo: true, coverImage: true, splashImage: true },
   });
-
-  await deleteManagedImages(replacedManagedImages([
+  const replacedImages = replacedManagedImages([
     { previous: current?.logo, next: d.logo },
     { previous: current?.coverImage, next: d.coverImage },
     { previous: current?.splashImage, next: d.splashImage },
-  ]));
+  ]);
 
   await prisma.restaurant.update({
     where: { id },
@@ -182,6 +181,7 @@ export async function updateRestaurantCore(
       draftUpdatedAt: new Date(),
     },
   });
+  await deleteManagedImages(replacedImages);
 
   await recordAudit({
     actor,

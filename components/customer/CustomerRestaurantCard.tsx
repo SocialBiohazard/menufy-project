@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { ClipboardCheck, ExternalLink, LayoutList, Settings } from "lucide-react";
+import { ExternalLink, LayoutList, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { togglePublish } from "@/lib/actions/restaurant";
 import { publicMenuUrl } from "@/lib/public-url";
@@ -51,7 +51,18 @@ export function CustomerRestaurantCard({
       <CardHeader className="space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="font-semibold">{restaurant.businessName}</h2>
+            <h2 className="font-semibold">
+              {canEdit ? (
+                <Link
+                  href={`/portal/restaurants/${restaurant.id}`}
+                  className="hover:underline"
+                >
+                  {restaurant.businessName}
+                </Link>
+              ) : (
+                restaurant.businessName
+              )}
+            </h2>
             <p className="text-sm text-muted-foreground">/{restaurant.slug} · {restaurant.role.toLowerCase()}</p>
           </div>
           <Badge variant={published ? "default" : "secondary"}>{published ? "Live" : "Offline"}</Badge>
@@ -70,9 +81,6 @@ export function CustomerRestaurantCard({
       <CardFooter className="flex flex-wrap gap-2">
         {canEdit && (
           <>
-            <Button size="sm" variant="ghost" nativeButton={false} render={<Link href="/portal/welcome" />}>
-              <ClipboardCheck className="size-4" /> Setup
-            </Button>
             <Button size="sm" variant="secondary" nativeButton={false} render={<Link href={`/portal/restaurants/${restaurant.id}/menu`} />}>
               <LayoutList className="size-4" /> Menu
             </Button>

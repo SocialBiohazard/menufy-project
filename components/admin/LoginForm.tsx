@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
+import { UtensilsCrossed } from "lucide-react";
 import { loginOperator } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,8 +24,11 @@ export function LoginForm({ initialError }: { initialError: string | null }) {
     <div className="flex min-h-dvh items-center justify-center bg-muted/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-2xl">MenuApp</CardTitle>
-          <CardDescription>Operator sign in</CardDescription>
+          <div className="mb-2 flex size-10 items-center justify-center rounded-lg bg-foreground text-background">
+            <UtensilsCrossed className="size-5" />
+          </div>
+          <CardTitle className="text-2xl">MenuApp operator</CardTitle>
+          <CardDescription>Manage restaurants, customers, and publishing.</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={action} className="flex flex-col gap-4">
@@ -56,6 +61,12 @@ export function LoginForm({ initialError }: { initialError: string | null }) {
               {pending ? "Signing in…" : "Sign in"}
             </Button>
           </form>
+          <p className="mt-5 border-t pt-4 text-center text-sm text-muted-foreground">
+            Restaurant customer?{" "}
+            <Link href="/portal/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Open the customer portal
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

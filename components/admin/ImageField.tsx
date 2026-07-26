@@ -27,9 +27,9 @@ export function ImageField({
   useEffect(() => {
     return () => {
       const uploaded = sessionUploadRef.current;
-      if (uploaded) void discardUploadedImage(uploaded);
+      if (uploaded) void discardUploadedImage(uploaded, slug);
     };
-  }, []);
+  }, [slug]);
 
   function onFile(file: File) {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
@@ -50,7 +50,9 @@ export function ImageField({
       else {
         const previousSessionUpload = sessionUploadRef.current;
         sessionUploadRef.current = res.url;
-        if (previousSessionUpload) void discardUploadedImage(previousSessionUpload);
+        if (previousSessionUpload) {
+          void discardUploadedImage(previousSessionUpload, slug);
+        }
         onChange(res.url);
       }
     });
@@ -92,7 +94,7 @@ export function ImageField({
               onClick={() => {
                 const uploaded = sessionUploadRef.current;
                 sessionUploadRef.current = null;
-                if (uploaded) void discardUploadedImage(uploaded);
+                if (uploaded) void discardUploadedImage(uploaded, slug);
                 onChange("");
               }}
             >

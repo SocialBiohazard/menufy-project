@@ -61,10 +61,7 @@ export async function getPublishedRestaurant(slug: string): Promise<MenuData | n
     select: { id: true, publishedSnapshot: true },
   });
   if (!restaurant) return null;
-  return (
-    hydrateSnapshot(restaurant.publishedSnapshot) ??
-    currentMenuData(restaurant.id)
-  );
+  return hydrateSnapshot(restaurant.publishedSnapshot);
 }
 
 /** Development-only visual fixture lookup. Callers must enforce the env guard. */
@@ -82,10 +79,7 @@ export async function getPublishedRestaurantByHostname(hostname: string): Promis
     select: { id: true, publishedSnapshot: true },
   });
   if (!restaurant) return null;
-  return (
-    hydrateSnapshot(restaurant.publishedSnapshot) ??
-    currentMenuData(restaurant.id)
-  );
+  return hydrateSnapshot(restaurant.publishedSnapshot);
 }
 
 /** Development-only hostname fixture lookup. */

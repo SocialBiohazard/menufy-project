@@ -216,16 +216,29 @@ export function MenuBuilder({
                   {c.items.length}
                 </span>
               </button>
-              <div className="flex opacity-0 transition group-hover:opacity-100">
-                <Button size="icon-xs" variant="ghost" onClick={() => moveCategory(i, -1)}>
+              <div className="flex opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label={`Move ${c.name} up`}
+                  disabled={i === 0}
+                  onClick={() => moveCategory(i, -1)}
+                >
                   <ChevronUp className="size-3.5" />
                 </Button>
-                <Button size="icon-xs" variant="ghost" onClick={() => moveCategory(i, 1)}>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label={`Move ${c.name} down`}
+                  disabled={i === categories.length - 1}
+                  onClick={() => moveCategory(i, 1)}
+                >
                   <ChevronDown className="size-3.5" />
                 </Button>
                 <Button
                   size="icon-xs"
                   variant="ghost"
+                  aria-label={`Edit ${c.name}`}
                   onClick={() => setCatDialog({ open: true, editing: c })}
                 >
                   <Pencil className="size-3.5" />
@@ -233,6 +246,7 @@ export function MenuBuilder({
                 <ConfirmDelete
                   title={`Delete "${c.name}"?`}
                   description="This removes the category and all its items."
+                  ariaLabel={`Delete ${c.name}`}
                   onConfirm={() => removeCategory(c.id)}
                 />
               </div>
@@ -270,10 +284,22 @@ export function MenuBuilder({
                     className="group flex items-center gap-3 rounded-lg border bg-background p-2.5"
                   >
                     <div className="flex flex-col">
-                      <Button size="icon-xs" variant="ghost" onClick={() => moveItem(i, -1)}>
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        aria-label={`Move ${it.name} up`}
+                        disabled={i === 0}
+                        onClick={() => moveItem(i, -1)}
+                      >
                         <ChevronUp className="size-3.5" />
                       </Button>
-                      <Button size="icon-xs" variant="ghost" onClick={() => moveItem(i, 1)}>
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        aria-label={`Move ${it.name} down`}
+                        disabled={i === selected.items.length - 1}
+                        onClick={() => moveItem(i, 1)}
+                      >
                         <ChevronDown className="size-3.5" />
                       </Button>
                     </div>
@@ -303,17 +329,19 @@ export function MenuBuilder({
                       <Switch
                         checked={it.isAvailable}
                         onCheckedChange={(v) => onToggleAvailable(it, v)}
-                        title="Available"
+                        aria-label={`${it.name} availability`}
                       />
                       <Button
                         size="icon-sm"
                         variant="ghost"
+                        aria-label={`Edit ${it.name}`}
                         onClick={() => setItemDialog({ open: true, editing: it })}
                       >
                         <Pencil className="size-4" />
                       </Button>
                       <ConfirmDelete
                         title={`Delete "${it.name}"?`}
+                        ariaLabel={`Delete ${it.name}`}
                         onConfirm={() => removeItem(it.id)}
                       />
                     </div>
@@ -354,16 +382,25 @@ export function MenuBuilder({
 function ConfirmDelete({
   title,
   description,
+  ariaLabel,
   onConfirm,
 }: {
   title: string;
   description?: string;
+  ariaLabel: string;
   onConfirm: () => void;
 }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger
-        render={<Button size="icon-xs" variant="ghost" className="text-destructive" />}
+        render={
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            className="text-destructive"
+            aria-label={ariaLabel}
+          />
+        }
       >
         <Trash2 className="size-3.5" />
       </AlertDialogTrigger>

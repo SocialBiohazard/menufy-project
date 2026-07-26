@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, ExternalLink, LayoutList } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { CoreEditorForm } from "@/components/admin/CoreEditorForm";
-import { QrDialog } from "@/components/admin/QrDialog";
-import { Button } from "@/components/ui/button";
+import { RestaurantWorkspaceHeader } from "@/components/shared/RestaurantWorkspaceHeader";
 import type { Lang } from "@/lib/i18n";
 import { publicMenuUrl } from "@/lib/public-url";
 
@@ -34,42 +31,17 @@ export default async function RestaurantEditorPage({
   });
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <div>
-        <Link
-          href="/dashboard"
-          className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Back to dashboard
-        </Link>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold">{r.businessName}</h1>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href={`/dashboard/restaurants/${r.id}/menu`} />}
-            >
-              <LayoutList className="size-4" />
-              Menu builder
-            </Button>
-            <QrDialog slug={r.slug} name={r.businessName} publicHostname={r.publicHostname} />
-            {r.isPublished && (
-              <Button
-                size="sm"
-                variant="outline"
-                nativeButton={false}
-                render={<a href={publicHref} target="_blank" rel="noreferrer" />}
-              >
-                <ExternalLink className="size-4" />
-                View live
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+    <div className="mx-auto flex max-w-5xl flex-col gap-6">
+      <RestaurantWorkspaceHeader
+        id={r.id}
+        name={r.businessName}
+        slug={r.slug}
+        publicHostname={r.publicHostname}
+        publicHref={publicHref}
+        isPublished={r.isPublished}
+        mode="operator"
+        current="settings"
+      />
 
       <CoreEditorForm
         restaurant={{
