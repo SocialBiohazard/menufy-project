@@ -17,7 +17,7 @@ test("password hashing verifies the original without storing it", async () => {
 });
 
 test("password policy rejects short and oversized values", () => {
-  assert.match(passwordValidationError("short") ?? "", /at least 12/);
+  assert.match(passwordValidationError("short") ?? "", /at least 10/);
   assert.match(passwordValidationError("x".repeat(129)) ?? "", /at most 128/);
   assert.equal(passwordValidationError("long enough password"), null);
 });

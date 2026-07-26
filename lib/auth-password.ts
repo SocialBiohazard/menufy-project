@@ -6,7 +6,7 @@ const PARALLELIZATION = 1;
 const MAX_MEMORY = 64 * 1024 * 1024;
 
 export function passwordValidationError(password: string): string | null {
-  if (password.length < 12) return "Password must be at least 12 characters";
+  if (password.length < 10) return "Password must be at least 10 characters";
   if (password.length > 128) return "Password must be at most 128 characters";
   return null;
 }
