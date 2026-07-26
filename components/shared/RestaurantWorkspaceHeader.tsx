@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 import {
   ArrowLeft,
   CloudUpload,
@@ -41,8 +41,6 @@ export function RestaurantWorkspaceHeader({
 }) {
   const { t } = usePanelI18n();
   const router = useRouter();
-  const [published, setPublished] = useState(isPublished);
-  const [dirty, setDirty] = useState(hasUnpublishedChanges);
   const [publishing, startPublishing] = useTransition();
   const root =
     mode === "operator"
@@ -57,8 +55,6 @@ export function RestaurantWorkspaceHeader({
         toast.error(result.error);
         return;
       }
-      setPublished(true);
-      setDirty(false);
       toast.success(t("Published current draft"));
       router.refresh();
     });
@@ -80,10 +76,10 @@ export function RestaurantWorkspaceHeader({
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {t("Restaurant workspace")}
             </p>
-            <Badge variant={published ? "default" : "secondary"}>
-              {t(published ? "Live" : "Draft")}
+            <Badge variant={isPublished ? "default" : "secondary"}>
+              {t(isPublished ? "Live" : "Draft")}
             </Badge>
-            {dirty && <Badge variant="outline">{t("Unpublished changes")}</Badge>}
+            {hasUnpublishedChanges && <Badge variant="outline">{t("Unpublished changes")}</Badge>}
           </div>
           <h1 className="truncate text-2xl font-semibold sm:text-3xl">{name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">/{slug}</p>
@@ -100,17 +96,17 @@ export function RestaurantWorkspaceHeader({
             <Eye className="size-4" />
             {t("Preview draft")}
           </Button>
-          {(!published || dirty) && (
+          {(!isPublished || hasUnpublishedChanges) && (
             <Button
               size="sm"
               onClick={publishCurrentDraft}
               disabled={publishing}
             >
               <CloudUpload className="size-4" />
-              {t(published ? "Publish changes" : "Publish menu")}
+              {t(isPublished ? "Publish changes" : "Publish menu")}
             </Button>
           )}
-          {published && (
+          {isPublished && (
             <Button
               size="sm"
               variant="outline"

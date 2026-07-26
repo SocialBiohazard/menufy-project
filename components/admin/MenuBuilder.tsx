@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   ChevronDown,
   ChevronUp,
@@ -57,6 +58,7 @@ export function MenuBuilder({
   allergens: AllergenOption[];
 }) {
   const { t } = usePanelI18n();
+  const router = useRouter();
   const [categories, setCategories] = useState(initialCategories);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialCategories[0]?.id ?? null,
@@ -78,6 +80,7 @@ export function MenuBuilder({
         : [...prev, cat];
     });
     setSelectedId(cat.id);
+    router.refresh();
   }
 
   function removeCategory(id: string) {
@@ -90,6 +93,8 @@ export function MenuBuilder({
       if (!res.ok) {
         setCategories(prev);
         toast.error(res.error);
+      } else {
+        router.refresh();
       }
     });
   }
@@ -103,6 +108,7 @@ export function MenuBuilder({
     startTransition(async () => {
       const res = await reorderCategories(restaurantId, next.map((c) => c.id));
       if (!res.ok) toast.error(res.error);
+      else router.refresh();
     });
   }
 
@@ -121,6 +127,7 @@ export function MenuBuilder({
         };
       }),
     );
+    router.refresh();
   }
 
   function removeItem(itemId: string) {
@@ -138,6 +145,8 @@ export function MenuBuilder({
       if (!res.ok) {
         setCategories(prev);
         toast.error(res.error);
+      } else {
+        router.refresh();
       }
     });
   }
@@ -159,6 +168,7 @@ export function MenuBuilder({
     startTransition(async () => {
       const res = await toggleAvailability(item.id, next);
       if (!res.ok) toast.error(res.error);
+      else router.refresh();
     });
   }
 
@@ -174,6 +184,7 @@ export function MenuBuilder({
     startTransition(async () => {
       const res = await reorderItems(selected.id, items.map((i) => i.id));
       if (!res.ok) toast.error(res.error);
+      else router.refresh();
     });
   }
 
