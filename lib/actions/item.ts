@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
-import { requireOperator } from "@/lib/auth";
-import { itemSchema, type ItemInput } from "@/lib/validation";
+import { recordAudit } from "@/lib/activity";
+import { requireRestaurantAccess } from "@/lib/authorization";
 import { deleteManagedImages, replacedManagedImages } from "@/lib/media-storage";
+import { prisma } from "@/lib/prisma";
+import { itemSchema, type ItemInput } from "@/lib/validation";
 
 type Result<T = undefined> =
   | { ok: true; data: T }
@@ -12,15 +13,23 @@ type Result<T = undefined> =
 
 const itemInclude = { allergens: true, nutrition: true } as const;
 
-async function revalidateForCategory(categoryId: string) {
-  const cat = await prisma.category.findUnique({
+async function categoryContext(categoryId: string) {
+  return prisma.category.findUnique({
     where: { id: categoryId },
     select: { restaurantId: true, restaurant: { select: { slug: true } } },
   });
-  if (cat) {
-    revalidatePath(`/dashboard/restaurants/${cat.restaurantId}/menu`);
-    revalidatePath(`/${cat.restaurant.slug}`);
-  }
+}
+
+async function markDraftAndRevalidate(categoryId: string) {
+  const context = await categoryContext(categoryId);
+  if (!context) return;
+  await prisma.restaurant.update({
+    where: { id: context.restaurantId },
+    data: { draftUpdatedAt: new Date() },
+  });
+  revalidatePath(`/dashboard/restaurants/${context.restaurantId}/menu`);
+  revalidatePath(`/portal/restaurants/${context.restaurantId}/menu`);
+  revalidatePath(`/${context.restaurant.slug}`);
 }
 
 function scalarData(d: ItemInput) {
@@ -44,16 +53,16 @@ function scalarData(d: ItemInput) {
 }
 
 function hasNutrition(d: ItemInput) {
-  return (
-    d.energyKcal != null ||
-    d.protein != null ||
-    d.fat != null ||
-    d.saturatedFat != null ||
-    d.carbohydrate != null ||
-    d.sugar != null ||
-    d.fiber != null ||
-    d.saltG != null
-  );
+  return [
+    d.energyKcal,
+    d.protein,
+    d.fat,
+    d.saturatedFat,
+    d.carbohydrate,
+    d.sugar,
+    d.fiber,
+    d.saltG,
+  ].some((value) => value != null);
 }
 
 function nutritionData(d: ItemInput) {
@@ -72,7 +81,9 @@ function nutritionData(d: ItemInput) {
 }
 
 export async function createItem(categoryId: string, input: ItemInput) {
-  await requireOperator();
+  const context = await categoryContext(categoryId);
+  if (!context) return { ok: false as const, error: "Category not found" };
+  const actor = await requireRestaurantAccess(context.restaurantId, "EDITOR");
   const parsed = itemSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid" };
@@ -82,7 +93,6 @@ export async function createItem(categoryId: string, input: ItemInput) {
     where: { categoryId },
     _max: { sortOrder: true },
   });
-
   const item = await prisma.item.create({
     data: {
       categoryId,
@@ -95,72 +105,124 @@ export async function createItem(categoryId: string, input: ItemInput) {
     },
     include: itemInclude,
   });
-
-  await revalidateForCategory(categoryId);
+  await markDraftAndRevalidate(categoryId);
+  await recordAudit({
+    actor,
+    restaurantId: context.restaurantId,
+    action: "CREATE",
+    entityType: "Item",
+    entityId: item.id,
+    changes: { name: item.name, price: item.price },
+  });
   return { ok: true as const, data: item };
 }
 
 export async function updateItem(id: string, input: ItemInput) {
-  await requireOperator();
+  const current = await prisma.item.findUnique({
+    where: { id },
+    select: {
+      imageUrl: true,
+      name: true,
+      price: true,
+      categoryId: true,
+      category: { select: { restaurantId: true } },
+    },
+  });
+  if (!current) return { ok: false as const, error: "Item not found" };
+  const actor = await requireRestaurantAccess(
+    current.category.restaurantId,
+    "EDITOR",
+  );
   const parsed = itemSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid" };
   }
   const d = parsed.data;
-  const current = await prisma.item.findUnique({
-    where: { id },
-    select: { imageUrl: true },
+  await prisma.$transaction(async (tx) => {
+    await tx.itemAllergen.deleteMany({ where: { itemId: id } });
+    if (d.allergenIds.length) {
+      await tx.itemAllergen.createMany({
+        data: d.allergenIds.map((allergenId) => ({ itemId: id, allergenId })),
+      });
+    }
+    if (hasNutrition(d)) {
+      await tx.nutrition.upsert({
+        where: { itemId: id },
+        create: { itemId: id, ...nutritionData(d) },
+        update: nutritionData(d),
+      });
+    } else {
+      await tx.nutrition.deleteMany({ where: { itemId: id } });
+    }
   });
-
-  // Reset allergens, then re-add.
-  await prisma.itemAllergen.deleteMany({ where: { itemId: id } });
-  if (d.allergenIds.length) {
-    await prisma.itemAllergen.createMany({
-      data: d.allergenIds.map((allergenId) => ({ itemId: id, allergenId })),
-    });
-  }
-
-  // Nutrition upsert or clear.
-  if (hasNutrition(d)) {
-    await prisma.nutrition.upsert({
-      where: { itemId: id },
-      create: { itemId: id, ...nutritionData(d) },
-      update: nutritionData(d),
-    });
-  } else {
-    await prisma.nutrition.deleteMany({ where: { itemId: id } });
-  }
-
   const item = await prisma.item.update({
     where: { id },
     data: scalarData(d),
     include: itemInclude,
   });
-  await deleteManagedImages(replacedManagedImages([
-    { previous: current?.imageUrl, next: d.imageUrl },
-  ]));
-
-  await revalidateForCategory(item.categoryId);
+  await deleteManagedImages(
+    replacedManagedImages([{ previous: current.imageUrl, next: d.imageUrl }]),
+  );
+  await markDraftAndRevalidate(item.categoryId);
+  await recordAudit({
+    actor,
+    restaurantId: current.category.restaurantId,
+    action: "UPDATE",
+    entityType: "Item",
+    entityId: item.id,
+    changes: {
+      name: { before: current.name, after: item.name },
+      price: { before: current.price, after: item.price },
+    },
+  });
   return { ok: true as const, data: item };
 }
 
 export async function deleteItem(id: string): Promise<Result> {
-  await requireOperator();
+  const current = await prisma.item.findUnique({
+    where: { id },
+    select: {
+      categoryId: true,
+      name: true,
+      category: { select: { restaurantId: true } },
+    },
+  });
+  if (!current) return { ok: false, error: "Item not found" };
+  const actor = await requireRestaurantAccess(
+    current.category.restaurantId,
+    "EDITOR",
+  );
   const item = await prisma.item.delete({ where: { id } });
   await deleteManagedImages([item.imageUrl]);
-  await revalidateForCategory(item.categoryId);
+  await markDraftAndRevalidate(item.categoryId);
+  await recordAudit({
+    actor,
+    restaurantId: current.category.restaurantId,
+    action: "DELETE",
+    entityType: "Item",
+    entityId: id,
+    changes: { name: current.name },
+  });
   return { ok: true, data: undefined };
 }
 
 export async function toggleAvailability(id: string, isAvailable: boolean) {
-  await requireOperator();
+  const current = await prisma.item.findUnique({
+    where: { id },
+    select: {
+      categoryId: true,
+      category: { select: { restaurantId: true } },
+    },
+  });
+  if (!current) return { ok: false as const, error: "Item not found" };
+  await requireRestaurantAccess(current.category.restaurantId, "EDITOR");
   try {
     const item = await prisma.item.update({
       where: { id },
       data: { isAvailable },
       include: itemInclude,
     });
-    await revalidateForCategory(item.categoryId);
+    await markDraftAndRevalidate(item.categoryId);
     return { ok: true as const, data: item };
   } catch {
     return { ok: false as const, error: "Could not update availability" };
@@ -171,12 +233,18 @@ export async function reorderItems(
   categoryId: string,
   orderedIds: string[],
 ): Promise<Result> {
-  await requireOperator();
+  const context = await categoryContext(categoryId);
+  if (!context) return { ok: false, error: "Category not found" };
+  await requireRestaurantAccess(context.restaurantId, "EDITOR");
+  const owned = await prisma.item.count({
+    where: { categoryId, id: { in: orderedIds } },
+  });
+  if (owned !== orderedIds.length) return { ok: false, error: "Invalid item order" };
   await prisma.$transaction(
-    orderedIds.map((id, i) =>
-      prisma.item.update({ where: { id }, data: { sortOrder: i } }),
+    orderedIds.map((id, sortOrder) =>
+      prisma.item.update({ where: { id }, data: { sortOrder } }),
     ),
   );
-  await revalidateForCategory(categoryId);
+  await markDraftAndRevalidate(categoryId);
   return { ok: true, data: undefined };
 }

@@ -11,6 +11,11 @@ Menufy is a managed QR-menu service. It has a public diner menu for each restaur
 - Next.js 16 App Router application running as a persistent Node server.
 - Prisma 7 with provider-neutral PostgreSQL.
 - Database-backed operators and opaque, hashed, expiring sessions.
+- Separate customer sessions and customer workspaces.
+- Owner/editor/viewer restaurant permissions and multi-location accounts.
+- One-time invitation activation, password management, notifications, and audit
+  history.
+- Stable draft/live separation through published menu snapshots.
 - Operator access additionally restricted by `OPERATOR_EMAILS`.
 - Scrypt password hashing and server-action login/logout.
 - Local media storage for development and private S3-compatible storage for production.
@@ -39,8 +44,12 @@ The currently configured remote PostgreSQL database is only the reconstruction/m
 - `scripts/create-operator.ts` creates or resets an allowlisted operator. Supply the password through the temporary `OPERATOR_PASSWORD` environment variable.
 - `lib/media-storage.ts` uses `.data/media` locally or S3 when `MEDIA_STORAGE_DRIVER=s3`.
 - Railway buckets are private; `/media/...` redirects to a short-lived signed object URL.
-- All mutations call `requireOperator()` and validate inputs.
-- Tenant hostnames cannot expose `/dashboard`, `/login`, or `/api`.
+- Mutations enforce operator or restaurant-specific customer permissions and
+  validate inputs.
+- Operators retain exclusive control of slugs, templates, hostnames, customer
+  plans, limits, suspension, and restaurant assignment.
+- Tenant hostnames cannot expose `/dashboard`, `/portal`, `/activate`, `/login`,
+  or `/api`.
 
 ## Verification
 
@@ -53,7 +62,10 @@ npx tsc --noEmit
 npm run build
 ```
 
-Then test login, sign-out, CRUD, upload/replacement/deletion, tenant isolation, İnci desktop/mobile/RTL behavior, healthcheck, and the production Railway domain.
+Then test operator and customer login/sign-out, invitation activation,
+role-specific CRUD, draft publication, upload/replacement/deletion, tenant
+isolation, İnci desktop/mobile/RTL behavior, healthcheck, and the production
+Railway domain.
 
 ## Remaining launch work
 

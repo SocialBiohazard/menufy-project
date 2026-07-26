@@ -1,8 +1,23 @@
 # Menufy
 
-Managed digital restaurant menus with an internal operator dashboard, multilingual public menus, QR codes, and per-restaurant hostnames.
+Managed digital restaurant menus with an internal operator dashboard, a
+customer portal, multilingual public menus, QR codes, and per-restaurant
+hostnames.
 
-The first-priority customer uses the dedicated `inci-heritage` template. Restaurant identity, profile information, content, translations, notices, currency, links, and visual settings are stored in PostgreSQL and edited through `/dashboard`.
+The first-priority customer uses the dedicated `inci-heritage` template.
+Restaurant identity, profile information, content, translations, notices,
+currency, links, and visual settings are stored in PostgreSQL. Operators use
+`/dashboard`; invited restaurant owners and staff use `/portal`.
+
+## Access model
+
+- Operators create customer workspaces, assign one or more restaurant
+  locations, and control plans, limits, domains, and templates.
+- Customer owners can edit their assigned restaurants, publish menu snapshots,
+  create QR codes, and invite owners, editors, or viewers.
+- Editors can manage content and publish. Viewers have read-only access.
+- Public diners only receive the latest published snapshot, so in-progress
+  customer edits do not alter the live menu.
 
 ## Local setup
 
@@ -61,7 +76,10 @@ Railway injects `PORT`; `npm start` binds the server to `0.0.0.0`. Restaurant ho
 ## Important paths
 
 - `app/dashboard` — operator application
+- `app/portal` — customer application and login
+- `app/activate` — one-time invitation activation
 - `components/admin` — restaurant settings and menu builder
+- `components/customer` — customer portal controls
 - `components/menu` — public menu templates
 - `lib/actions` — authenticated mutations
 - `lib/auth.ts` and `lib/auth-password.ts` — database sessions and password hashing

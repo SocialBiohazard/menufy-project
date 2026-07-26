@@ -1,6 +1,9 @@
 "use server";
 
-import { requireOperator } from "@/lib/auth";
+import {
+  requireAuthenticatedActor,
+  requireRestaurantAccess,
+} from "@/lib/authorization";
 import { prisma } from "@/lib/prisma";
 import {
   InvalidImageError,
@@ -19,12 +22,16 @@ type UploadResult = { ok: true; url: string } | { ok: false; error: string };
  * Optimizes and stores an image through the configured media driver.
  */
 export async function uploadImage(formData: FormData): Promise<UploadResult> {
-  await requireOperator();
-
   const file = formData.get("file");
   const slug = (formData.get("slug") as string) || "misc";
   const kind = (formData.get("kind") as string) || "items";
   if (!(file instanceof File)) return { ok: false, error: "No file provided" };
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { slug },
+    select: { id: true },
+  });
+  if (!restaurant) return { ok: false, error: "Restaurant not found" };
+  await requireRestaurantAccess(restaurant.id, "EDITOR");
   if (file.size === 0 || file.size > MAX_SOURCE_IMAGE_BYTES) {
     return { ok: false, error: "Use a PNG, JPEG, or WebP image smaller than 8 MB" };
   }
@@ -54,7 +61,7 @@ export async function uploadImage(formData: FormData): Promise<UploadResult> {
 }
 
 export async function discardUploadedImage(value: string): Promise<void> {
-  await requireOperator();
+  await requireAuthenticatedActor();
   if (!managedStoragePath(value)) return;
 
   const [restaurant, category, item] = await Promise.all([

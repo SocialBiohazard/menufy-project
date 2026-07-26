@@ -20,6 +20,24 @@ enum NavigationStyle {
   ACCORDION
 }
 
+enum CustomerRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum CustomerPlan {
+  TRIAL
+  BASIC
+  PRO
+}
+
+enum AuditActorType {
+  OPERATOR
+  CUSTOMER
+  SYSTEM
+}
+
 model Restaurant {
   id           String  @id @default(cuid())
   slug         String  @unique
@@ -84,11 +102,21 @@ model Restaurant {
   enabledLangs String[] @default(["tr", "en", "ar"])
 
   isPublished Boolean  @default(false)
+  publishedSnapshot Json?
+  publishedAt DateTime?
+  draftUpdatedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  customerAccountId String?
+  customerAccount CustomerAccount? @relation(fields: [customerAccountId], references: [id], onDelete: SetNull)
   categories    Category[]
   menuSchedules MenuSchedule[]
+  customerMemberships RestaurantMembership[]
+  auditLogs AuditLog[]
+  notifications Notification[]
+
+  @@index([customerAccountId])
 }
 
 model Operator {
@@ -100,6 +128,7 @@ model Operator {
   updatedAt    DateTime @updatedAt
 
   sessions OperatorSession[]
+  notifications Notification[]
 }
 
 model OperatorSession {
@@ -112,6 +141,117 @@ model OperatorSession {
 
   @@index([operatorId])
   @@index([expiresAt])
+}
+
+model CustomerAccount {
+  id              String       @id @default(cuid())
+  name            String
+  plan            CustomerPlan @default(TRIAL)
+  maxRestaurants  Int          @default(1)
+  maxStorageBytes BigInt       @default(1073741824)
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  users       CustomerUser[]
+  restaurants Restaurant[]
+  invitations CustomerInvitation[]
+}
+
+model CustomerUser {
+  id           String   @id @default(cuid())
+  accountId    String
+  account      CustomerAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  email        String   @unique
+  name         String?
+  passwordHash String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions       CustomerSession[]
+  memberships    RestaurantMembership[]
+  notifications  Notification[]
+  sentInvitations CustomerInvitation[] @relation("CustomerInviter")
+
+  @@index([accountId])
+}
+
+model CustomerSession {
+  id             String       @id @default(cuid())
+  tokenHash      String       @unique
+  customerUserId String
+  customerUser   CustomerUser @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  @@index([customerUserId])
+  @@index([expiresAt])
+}
+
+model RestaurantMembership {
+  id             String       @id @default(cuid())
+  customerUserId String
+  customerUser   CustomerUser @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
+  restaurantId   String
+  restaurant     Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  role           CustomerRole
+  createdAt      DateTime     @default(now())
+
+  @@unique([customerUserId, restaurantId])
+  @@index([restaurantId])
+}
+
+model CustomerInvitation {
+  id                      String       @id @default(cuid())
+  tokenHash               String       @unique
+  email                   String
+  role                    CustomerRole
+  restaurantIds           String[]
+  customerAccountId       String
+  customerAccount         CustomerAccount @relation(fields: [customerAccountId], references: [id], onDelete: Cascade)
+  invitedByCustomerUserId String?
+  invitedByCustomerUser   CustomerUser? @relation("CustomerInviter", fields: [invitedByCustomerUserId], references: [id], onDelete: SetNull)
+  expiresAt               DateTime
+  acceptedAt              DateTime?
+  createdAt               DateTime     @default(now())
+
+  @@index([customerAccountId])
+  @@index([email])
+}
+
+model AuditLog {
+  id          String         @id @default(cuid())
+  restaurantId String?
+  restaurant  Restaurant?    @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  actorType   AuditActorType
+  actorId     String?
+  actorEmail  String?
+  action      String
+  entityType  String
+  entityId    String?
+  changes     Json?
+  createdAt   DateTime       @default(now())
+
+  @@index([restaurantId, createdAt])
+}
+
+model Notification {
+  id             String        @id @default(cuid())
+  operatorId     String?
+  operator       Operator?     @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  customerUserId String?
+  customerUser   CustomerUser? @relation(fields: [customerUserId], references: [id], onDelete: Cascade)
+  restaurantId   String?
+  restaurant     Restaurant?   @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  type           String
+  title          String
+  body           String?
+  readAt         DateTime?
+  createdAt      DateTime      @default(now())
+
+  @@index([operatorId, createdAt])
+  @@index([customerUserId, createdAt])
 }
 
 model Category {

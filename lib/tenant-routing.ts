@@ -1,4 +1,10 @@
-const PRIVATE_OR_SYSTEM_PREFIXES = ["/api", "/dashboard", "/login"] as const;
+const PRIVATE_OR_SYSTEM_PREFIXES = [
+  "/api",
+  "/dashboard",
+  "/login",
+  "/portal",
+  "/activate",
+] as const;
 
 export function isTenantRestrictedPath(pathname: string): boolean {
   return PRIVATE_OR_SYSTEM_PREFIXES.some(

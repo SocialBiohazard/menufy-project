@@ -100,7 +100,13 @@ export interface CoreFormData {
   themeText: string;
 }
 
-export function CoreEditorForm({ restaurant }: { restaurant: CoreFormData }) {
+export function CoreEditorForm({
+  restaurant,
+  customerMode = false,
+}: {
+  restaurant: CoreFormData;
+  customerMode?: boolean;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [f, setF] = useState<CoreFormData>(restaurant);
@@ -207,6 +213,7 @@ export function CoreEditorForm({ restaurant }: { restaurant: CoreFormData }) {
                 id="slug"
                 value={f.slug}
                 onChange={(e) => set("slug", slugify(e.target.value))}
+                disabled={customerMode}
               />
             </div>
           </div>
@@ -224,6 +231,7 @@ export function CoreEditorForm({ restaurant }: { restaurant: CoreFormData }) {
             <Select
               value={f.templateType}
               onValueChange={(v) => set("templateType", v ?? f.templateType)}
+              disabled={customerMode}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -305,6 +313,7 @@ export function CoreEditorForm({ restaurant }: { restaurant: CoreFormData }) {
               value={f.publicHostname}
               onChange={(e) => set("publicHostname", e.target.value.trim().toLowerCase())}
               placeholder="menu.example.com"
+              disabled={customerMode}
             />
             <p className="text-xs text-muted-foreground">
               Hostname only—no protocol or path. DNS is configured separately.

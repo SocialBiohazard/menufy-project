@@ -5,6 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { DEFAULT_CATEGORIES } from "@/lib/default-menu";
 import { requireOperator } from "@/lib/auth";
+import { requireRestaurantAccess } from "@/lib/authorization";
+import { notifyRestaurantMembers, recordAudit } from "@/lib/activity";
+import { publishedSnapshotFor } from "@/lib/menu";
 import { publicationIssues } from "@/lib/publication-readiness";
 import { THEMES } from "@/lib/themes";
 import { deleteManagedImages, replacedManagedImages } from "@/lib/media-storage";
@@ -22,7 +25,7 @@ type ActionResult<T = undefined> =
 export async function createRestaurant(
   input: RestaurantCreateInput,
 ): Promise<ActionResult<{ id: string }>> {
-  await requireOperator();
+  const operator = await requireOperator();
 
   const parsed = restaurantCreateSchema.safeParse(input);
   if (!parsed.success) {
@@ -48,6 +51,18 @@ export async function createRestaurant(
     },
   });
 
+  await recordAudit({
+    actor: {
+      type: "OPERATOR",
+      id: operator.id,
+      email: operator.email,
+      role: "OPERATOR",
+    },
+    restaurantId: restaurant.id,
+    action: "CREATE",
+    entityType: "Restaurant",
+    entityId: restaurant.id,
+  });
   revalidatePath("/dashboard");
   return { ok: true, data: { id: restaurant.id } };
 }
@@ -56,13 +71,27 @@ export async function updateRestaurantCore(
   id: string,
   input: RestaurantCoreInput,
 ): Promise<ActionResult> {
-  await requireOperator();
+  const actor = await requireRestaurantAccess(id, "EDITOR");
 
   const parsed = restaurantCoreSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
-  const d = parsed.data;
+  const submitted = parsed.data;
+  const reserved = await prisma.restaurant.findUnique({
+    where: { id },
+    select: { slug: true, templateType: true, publicHostname: true },
+  });
+  if (!reserved) return { ok: false, error: "Restaurant not found" };
+  const d =
+    actor.type === "CUSTOMER"
+      ? {
+          ...submitted,
+          slug: reserved.slug,
+          templateType: reserved.templateType,
+          publicHostname: reserved.publicHostname ?? "",
+        }
+      : submitted;
 
   // Slug uniqueness (excluding self).
   const clash = await prisma.restaurant.findFirst({
@@ -150,9 +179,18 @@ export async function updateRestaurantCore(
       themeBackground: d.themeBackground || null,
       themeBorder: d.themeBorder || null,
       themeText: d.themeText || null,
+      draftUpdatedAt: new Date(),
     },
   });
 
+  await recordAudit({
+    actor,
+    restaurantId: id,
+    action: "UPDATE",
+    entityType: "Restaurant",
+    entityId: id,
+    changes: { scope: "settings" },
+  });
   revalidatePath("/dashboard");
   revalidatePath(`/dashboard/restaurants/${id}`);
   if (current) revalidatePath(`/${current.slug}`);
@@ -164,7 +202,7 @@ export async function togglePublish(
   id: string,
   isPublished: boolean,
 ): Promise<ActionResult> {
-  await requireOperator();
+  const actor = await requireRestaurantAccess(id, "EDITOR");
   if (isPublished) {
     const candidate = await prisma.restaurant.findUnique({
       where: { id },
@@ -189,10 +227,38 @@ export async function togglePublish(
       return { ok: false, error: `Cannot publish: ${issues.join("; ")}` };
     }
   }
+  const snapshot = isPublished ? await publishedSnapshotFor(id) : null;
+  const now = new Date();
   const r = await prisma.restaurant.update({
     where: { id },
-    data: { isPublished },
+    data: {
+      isPublished,
+      ...(isPublished
+        ? {
+            publishedSnapshot: snapshot ?? Prisma.JsonNull,
+            publishedAt: now,
+            draftUpdatedAt: now,
+          }
+        : {}),
+    },
     select: { slug: true },
+  });
+  await recordAudit({
+    actor,
+    restaurantId: id,
+    action: isPublished ? "PUBLISH" : "UNPUBLISH",
+    entityType: "Restaurant",
+    entityId: id,
+  });
+  await notifyRestaurantMembers({
+    restaurantId: id,
+    type: isPublished ? "MENU_PUBLISHED" : "MENU_UNPUBLISHED",
+    title: isPublished ? "Menu published" : "Menu taken offline",
+    body:
+      actor.type === "CUSTOMER"
+        ? `Changed by ${actor.email}`
+        : "Changed by Menufy",
+    excludeCustomerUserId: actor.type === "CUSTOMER" ? actor.id : undefined,
   });
   revalidatePath("/dashboard");
   revalidatePath(`/${r.slug}`);
@@ -200,7 +266,7 @@ export async function togglePublish(
 }
 
 export async function deleteRestaurant(id: string): Promise<ActionResult> {
-  await requireOperator();
+  const operator = await requireOperator();
   const media = await prisma.restaurant.findUnique({
     where: { id },
     select: {
@@ -218,6 +284,18 @@ export async function deleteRestaurant(id: string): Promise<ActionResult> {
   const r = await prisma.restaurant.delete({
     where: { id },
     select: { slug: true },
+  });
+  await recordAudit({
+    actor: {
+      type: "OPERATOR",
+      id: operator.id,
+      email: operator.email,
+      role: "OPERATOR",
+    },
+    action: "DELETE",
+    entityType: "Restaurant",
+    entityId: id,
+    changes: { slug: r.slug },
   });
   await deleteManagedImages([
     media?.logo,
