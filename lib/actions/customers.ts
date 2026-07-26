@@ -12,6 +12,11 @@ export type CustomerManagementState = {
   activationPath: string | null;
 };
 
+function activationUrl(token: string) {
+  const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
+  return origin ? `${origin}/activate/${token}` : `/activate/${token}`;
+}
+
 const workspaceSchema = z.object({
   accountName: z.string().trim().min(2).max(120),
   email: z.email(),
@@ -63,7 +68,7 @@ export async function createCustomerWorkspace(
     });
   });
   revalidatePath("/dashboard/customers");
-  return { error: null, activationPath: `/activate/${token}` };
+  return { error: null, activationPath: activationUrl(token) };
 }
 
 const inviteSchema = z.object({
@@ -122,7 +127,7 @@ export async function inviteCustomerStaff(
       expiresAt: new Date(Date.now() + 7 * 86_400_000),
     },
   });
-  return { error: null, activationPath: `/activate/${token}` };
+  return { error: null, activationPath: activationUrl(token) };
 }
 
 const accountSettingsSchema = z.object({

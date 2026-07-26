@@ -31,8 +31,15 @@ export function CustomerManagementForm({
       {state.error && <p className="text-sm text-destructive">{state.error}</p>}
       {state.activationPath && (
         <div className="rounded-md border bg-muted p-3 text-sm">
-          Customer activation path:
-          <code className="mt-1 block break-all">{state.activationPath}</code>
+          Customer activation link:
+          <a
+            className="mt-1 block break-all font-mono text-primary underline"
+            href={state.activationPath}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {state.activationPath}
+          </a>
         </div>
       )}
       <Button type="submit" disabled={pending || restaurants.length === 0}>Create customer workspace</Button>
