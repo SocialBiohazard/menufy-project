@@ -34,6 +34,10 @@ export default async function CustomerMenuBuilderPage({
         publicHostname={restaurant.publicHostname}
         publicHref={publicHref}
         isPublished={restaurant.isPublished}
+        hasUnpublishedChanges={Boolean(
+          restaurant.draftUpdatedAt &&
+          (!restaurant.publishedAt || restaurant.draftUpdatedAt > restaurant.publishedAt)
+        )}
         mode="customer"
         current="menu"
       />

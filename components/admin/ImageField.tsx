@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useId, useRef, useTransition } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+  useTransition,
+} from "react";
 import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { discardUploadedImage, uploadImage } from "@/lib/actions/media";
@@ -8,24 +15,34 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
-export function ImageField({
-  value,
-  onChange,
-  slug,
-  kind = "items",
-  label = "Image",
-}: {
+export type ImageFieldHandle = {
+  commitUpload: () => void;
+};
+
+export const ImageField = forwardRef<ImageFieldHandle, {
   value: string;
   onChange: (url: string) => void;
   slug: string;
   kind?: string;
   label?: string;
-}) {
+}>(function ImageField({
+  value,
+  onChange,
+  slug,
+  kind = "items",
+  label = "Image",
+}, ref) {
   const { t } = usePanelI18n();
   const inputRef = useRef<HTMLInputElement>(null);
   const sessionUploadRef = useRef<string | null>(null);
   const [pending, startTransition] = useTransition();
   const inputId = useId();
+
+  useImperativeHandle(ref, () => ({
+    commitUpload() {
+      sessionUploadRef.current = null;
+    },
+  }), []);
 
   useEffect(() => {
     return () => {
@@ -121,4 +138,4 @@ export function ImageField({
       </div>
     </div>
   );
-}
+});

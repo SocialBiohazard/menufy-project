@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { AllergenOption, BuilderItem } from "@/lib/builder-types";
 import { toBuilderItem } from "@/lib/builder-types";
 import { createItem, updateItem } from "@/lib/actions/item";
-import { ImageField } from "@/components/admin/ImageField";
+import { ImageField, type ImageFieldHandle } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -80,6 +80,7 @@ export function ItemDialog({
   const { t } = usePanelI18n();
   const [pending, startTransition] = useTransition();
   const [f, setF] = useState<FormState>(() => stateFor(editing));
+  const imageFieldRef = useRef<ImageFieldHandle>(null);
 
   function set<K extends keyof FormState>(k: K, v: FormState[K]) {
     setF((prev) => ({ ...prev, [k]: v }));
@@ -127,6 +128,7 @@ export function ItemDialog({
         toast.error(res.error);
         return;
       }
+      imageFieldRef.current?.commitUpload();
       onSaved(toBuilderItem(res.data));
       onOpenChange(false);
       toast.success(editing ? "Item updated" : "Item added");
@@ -141,6 +143,7 @@ export function ItemDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
           <ImageField
+            ref={imageFieldRef}
             value={f.imageUrl}
             onChange={(url) => set("imageUrl", url)}
             slug={restaurantSlug}

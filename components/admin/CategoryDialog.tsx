@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { BuilderCategory } from "@/lib/builder-types";
 import { createCategory, updateCategory } from "@/lib/actions/category";
-import { ImageField } from "@/components/admin/ImageField";
+import { ImageField, type ImageFieldHandle } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ export function CategoryDialog({
   const [nameEn, setNameEn] = useState(editing?.nameEn ?? "");
   const [nameAr, setNameAr] = useState(editing?.nameAr ?? "");
   const [imageUrl, setImageUrl] = useState(editing?.imageUrl ?? "");
+  const imageFieldRef = useRef<ImageFieldHandle>(null);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,6 +59,7 @@ export function CategoryDialog({
         toast.error(res.error);
         return;
       }
+      imageFieldRef.current?.commitUpload();
       onSaved(res.data);
       onOpenChange(false);
       toast.success(editing ? "Category updated" : "Category added");
@@ -72,6 +74,7 @@ export function CategoryDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
           <ImageField
+            ref={imageFieldRef}
             value={imageUrl}
             onChange={setImageUrl}
             slug={restaurantSlug}

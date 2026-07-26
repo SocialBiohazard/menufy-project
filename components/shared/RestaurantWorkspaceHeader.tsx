@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import {
   ArrowLeft,
+  CloudUpload,
   ExternalLink,
   Eye,
   LayoutList,
   Settings,
 } from "lucide-react";
+import { toast } from "sonner";
+import { togglePublish } from "@/lib/actions/restaurant";
 import { QrDialog } from "@/components/admin/QrDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +25,7 @@ export function RestaurantWorkspaceHeader({
   publicHostname,
   publicHref,
   isPublished,
+  hasUnpublishedChanges,
   mode,
   current,
 }: {
@@ -29,15 +35,34 @@ export function RestaurantWorkspaceHeader({
   publicHostname: string | null;
   publicHref: string;
   isPublished: boolean;
+  hasUnpublishedChanges: boolean;
   mode: "operator" | "customer";
   current: "settings" | "menu";
 }) {
   const { t } = usePanelI18n();
+  const router = useRouter();
+  const [published, setPublished] = useState(isPublished);
+  const [dirty, setDirty] = useState(hasUnpublishedChanges);
+  const [publishing, startPublishing] = useTransition();
   const root =
     mode === "operator"
       ? `/dashboard/restaurants/${id}`
       : `/portal/restaurants/${id}`;
   const backHref = mode === "operator" ? "/dashboard" : "/portal";
+
+  function publishCurrentDraft() {
+    startPublishing(async () => {
+      const result = await togglePublish(id, true);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      setPublished(true);
+      setDirty(false);
+      toast.success(t("Published current draft"));
+      router.refresh();
+    });
+  }
 
   return (
     <header className="space-y-4">
@@ -55,9 +80,10 @@ export function RestaurantWorkspaceHeader({
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {t("Restaurant workspace")}
             </p>
-            <Badge variant={isPublished ? "default" : "secondary"}>
-              {t(isPublished ? "Live" : "Draft")}
+            <Badge variant={published ? "default" : "secondary"}>
+              {t(published ? "Live" : "Draft")}
             </Badge>
+            {dirty && <Badge variant="outline">{t("Unpublished changes")}</Badge>}
           </div>
           <h1 className="truncate text-2xl font-semibold sm:text-3xl">{name}</h1>
           <p className="mt-1 text-sm text-muted-foreground">/{slug}</p>
@@ -69,12 +95,22 @@ export function RestaurantWorkspaceHeader({
             size="sm"
             variant="outline"
             nativeButton={false}
-            render={<Link href={`/portal-preview/${id}`} target="_blank" />}
+            render={<Link href={`/portal-preview/${id}?screen=menu`} target="_blank" />}
           >
             <Eye className="size-4" />
             {t("Preview draft")}
           </Button>
-          {isPublished && (
+          {(!published || dirty) && (
+            <Button
+              size="sm"
+              onClick={publishCurrentDraft}
+              disabled={publishing}
+            >
+              <CloudUpload className="size-4" />
+              {t(published ? "Publish changes" : "Publish menu")}
+            </Button>
+          )}
+          {published && (
             <Button
               size="sm"
               variant="outline"
@@ -82,7 +118,7 @@ export function RestaurantWorkspaceHeader({
               render={<a href={publicHref} target="_blank" rel="noreferrer" />}
             >
               <ExternalLink className="size-4" />
-              {t("View live")}
+              {t("View published menu")}
             </Button>
           )}
         </div>

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { slugify } from "@/lib/slug";
 import { THEMES, resolveTheme } from "@/lib/themes";
 import { updateRestaurantCore } from "@/lib/actions/restaurant";
 import type { Lang } from "@/lib/i18n";
-import { ImageField } from "@/components/admin/ImageField";
+import { ImageField, type ImageFieldHandle } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -122,6 +122,9 @@ export function CoreEditorForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [f, setF] = useState<CoreFormData>(restaurant);
+  const logoFieldRef = useRef<ImageFieldHandle>(null);
+  const coverFieldRef = useRef<ImageFieldHandle>(null);
+  const splashFieldRef = useRef<ImageFieldHandle>(null);
 
   function set<K extends keyof CoreFormData>(key: K, value: CoreFormData[K]) {
     setF((prev) => ({ ...prev, [key]: value }));
@@ -196,6 +199,9 @@ export function CoreEditorForm({
         toast.error(res.error);
         return;
       }
+      logoFieldRef.current?.commitUpload();
+      coverFieldRef.current?.commitUpload();
+      splashFieldRef.current?.commitUpload();
       toast.success(t("Saved"));
       router.refresh();
     });
@@ -283,6 +289,7 @@ export function CoreEditorForm({
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-6">
             <ImageField
+              ref={logoFieldRef}
               value={f.logo}
               onChange={(url) => set("logo", url)}
               slug={f.slug}
@@ -290,6 +297,7 @@ export function CoreEditorForm({
               label="Logo"
             />
             <ImageField
+              ref={coverFieldRef}
               value={f.coverImage}
               onChange={(url) => set("coverImage", url)}
               slug={f.slug}
@@ -327,6 +335,7 @@ export function CoreEditorForm({
             {t("Show the branded welcome screen before the menu")}
           </label>
           <ImageField
+            ref={splashFieldRef}
             value={f.splashImage}
             onChange={(url) => set("splashImage", url)}
             slug={f.slug}

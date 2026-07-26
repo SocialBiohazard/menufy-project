@@ -30,6 +30,10 @@ export default async function CustomerRestaurantSettingsPage({
         publicHostname={restaurant.publicHostname}
         publicHref={publicHref}
         isPublished={restaurant.isPublished}
+        hasUnpublishedChanges={Boolean(
+          restaurant.draftUpdatedAt &&
+          (!restaurant.publishedAt || restaurant.draftUpdatedAt > restaurant.publishedAt)
+        )}
         mode="customer"
         current="settings"
       />

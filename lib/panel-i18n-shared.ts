@@ -277,6 +277,9 @@ const tr = {
   "Leave notices and dates blank when the restaurant has not supplied or approved the facts.": "Restoran bilgileri sağlamadıysa veya onaylamadıysa bildirimleri ve tarihleri boş bırakın.",
   "Optional. Leave the text blank to hide attribution.": "İsteğe bağlıdır. Atfı gizlemek için metni boş bırakın.",
   "Override the template's palette. Unchecked = use the template default.": "Şablonun renk paletini geçersiz kılın. İşaretlenmemişse şablon varsayılanı kullanılır.",
+  "Publish changes": "Değişiklikleri yayınla",
+  "Publish menu": "Menüyü yayınla",
+  "View published menu": "Yayınlanan menüyü görüntüle",
 } as const;
 
 const ar: Record<keyof typeof tr, string> = {
@@ -540,6 +543,9 @@ const ar: Record<keyof typeof tr, string> = {
   "Leave notices and dates blank when the restaurant has not supplied or approved the facts.": "اترك التنبيهات والتواريخ فارغة إذا لم يزوّد المطعم المعلومات أو يعتمدها.",
   "Optional. Leave the text blank to hide attribution.": "اختياري. اترك النص فارغاً لإخفاء النسبة.",
   "Override the template's palette. Unchecked = use the template default.": "تجاوز ألوان القالب. عند عدم التحديد تُستخدم ألوان القالب الافتراضية.",
+  "Publish changes": "نشر التغييرات",
+  "Publish menu": "نشر القائمة",
+  "View published menu": "عرض القائمة المنشورة",
 };
 
 type TranslationKey = keyof typeof tr;

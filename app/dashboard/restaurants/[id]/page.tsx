@@ -39,6 +39,9 @@ export default async function RestaurantEditorPage({
         publicHostname={r.publicHostname}
         publicHref={publicHref}
         isPublished={r.isPublished}
+        hasUnpublishedChanges={Boolean(
+          r.draftUpdatedAt && (!r.publishedAt || r.draftUpdatedAt > r.publishedAt)
+        )}
         mode="operator"
         current="settings"
       />
