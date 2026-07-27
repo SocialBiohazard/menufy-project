@@ -56,6 +56,7 @@ const SETTINGS_SECTIONS = [
   { id: "menu-notices", label: "Notices" },
   { id: "languages", label: "Languages" },
   { id: "appearance", label: "Appearance" },
+  { id: "footer-attribution", label: "Footer attribution" },
 ] as const;
 
 export interface CoreFormData {

@@ -1,10 +1,28 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Trash2, UserMinus, Unlink } from "lucide-react";
+import { toast } from "sonner";
 import {
   assignRestaurantToCustomer,
+  deleteCustomerWorkspace,
+  removeCustomerUser,
+  unassignRestaurantFromCustomer,
   updateCustomerAccount,
+  updateCustomerMembership,
 } from "@/lib/actions/customers";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +68,199 @@ export function CustomerAccountSettings({
         {pending ? t("Saving…") : t("Save account limits")}
       </Button>
     </form>
+  );
+}
+
+type AccountLifecycleProps = {
+  account: {
+    id: string;
+    name: string;
+    restaurants: Array<{ id: string; businessName: string }>;
+    users: Array<{
+      id: string;
+      email: string;
+      name: string | null;
+      memberships: Array<{
+        id: string;
+        role: "OWNER" | "EDITOR" | "VIEWER";
+        restaurant: { id: string; businessName: string };
+      }>;
+    }>;
+  };
+};
+
+export function CustomerAccountLifecycle({ account }: AccountLifecycleProps) {
+  const { t } = usePanelI18n();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [roles, setRoles] = useState<Record<string, "OWNER" | "EDITOR" | "VIEWER">>(
+    () =>
+      Object.fromEntries(
+        account.users.flatMap((user) =>
+          user.memberships.map((membership) => [membership.id, membership.role]),
+        ),
+      ),
+  );
+  const [confirmation, setConfirmation] = useState("");
+
+  const run = (
+    operation: () => Promise<{ ok: true } | { ok: false; error: string }>,
+    success: string,
+  ) => {
+    startTransition(async () => {
+      const result = await operation();
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(t(success));
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="space-y-4 rounded-md border p-3">
+      <div className="space-y-2">
+        <p className="text-sm font-medium">{t("Assigned locations")}</p>
+        {account.restaurants.map((restaurant) => (
+          <div key={restaurant.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-muted/50 p-2 text-sm">
+            <span>{restaurant.businessName}</span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() =>
+                run(
+                  () => unassignRestaurantFromCustomer(account.id, restaurant.id),
+                  "Location unassigned",
+                )
+              }
+            >
+              <Unlink className="size-4" />
+              {t("Unassign")}
+            </Button>
+          </div>
+        ))}
+        {!account.restaurants.length && (
+          <p className="text-sm text-muted-foreground">{t("No locations")}</p>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <p className="text-sm font-medium">{t("Users and access")}</p>
+        {account.users.map((user) => (
+          <div key={user.id} className="space-y-2 rounded-md bg-muted/50 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium">{user.name || user.email}</p>
+                {user.name && <p className="text-xs text-muted-foreground">{user.email}</p>}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                disabled={pending}
+                onClick={() =>
+                  run(
+                    () => removeCustomerUser(account.id, user.id),
+                    "User access revoked",
+                  )
+                }
+              >
+                <UserMinus className="size-4" />
+                {t("Revoke user")}
+              </Button>
+            </div>
+            {user.memberships.map((membership) => (
+              <div key={membership.id} className="grid gap-2 sm:grid-cols-[1fr_9rem_auto] sm:items-center">
+                <span className="text-sm">{membership.restaurant.businessName}</span>
+                <select
+                  value={roles[membership.id] ?? membership.role}
+                  onChange={(event) =>
+                    setRoles((current) => ({
+                      ...current,
+                      [membership.id]: event.target.value as "OWNER" | "EDITOR" | "VIEWER",
+                    }))
+                  }
+                  className="h-9 rounded-md border bg-background px-2 text-sm"
+                >
+                  <option value="OWNER">{t("Owner")}</option>
+                  <option value="EDITOR">{t("Editor")}</option>
+                  <option value="VIEWER">{t("Viewer")}</option>
+                </select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={pending || roles[membership.id] === membership.role}
+                  onClick={() =>
+                    run(
+                      () =>
+                        updateCustomerMembership(
+                          membership.id,
+                          roles[membership.id] ?? membership.role,
+                        ),
+                      "Role updated",
+                    )
+                  }
+                >
+                  {t("Update role")}
+                </Button>
+              </div>
+            ))}
+            {!user.memberships.length && (
+              <p className="text-xs text-muted-foreground">{t("No location access")}</p>
+            )}
+          </div>
+        ))}
+        {!account.users.length && (
+          <p className="text-sm text-muted-foreground">{t("No activated users")}</p>
+        )}
+      </div>
+
+      <div className="flex justify-end border-t pt-3">
+        <AlertDialog>
+          <AlertDialogTrigger render={<Button type="button" variant="destructive" size="sm" />}>
+            <Trash2 className="size-4" />
+            {t("Delete workspace")}
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("Delete customer workspace?")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("Users and invitations will be deleted. Restaurants will be preserved and unassigned.")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor={`delete-${account.id}`}>
+                {t("Type the workspace name to confirm")}: {account.name}
+              </Label>
+              <Input
+                id={`delete-${account.id}`}
+                value={confirmation}
+                onChange={(event) => setConfirmation(event.target.value)}
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={pending || confirmation !== account.name}
+                onClick={() =>
+                  run(
+                    () => deleteCustomerWorkspace(account.id, confirmation),
+                    "Workspace deleted",
+                  )
+                }
+              >
+                {t("Delete workspace")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
   );
 }
 

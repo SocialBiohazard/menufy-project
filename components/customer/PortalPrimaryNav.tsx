@@ -28,7 +28,7 @@ const items = [
   },
 ];
 
-export function PortalPrimaryNav() {
+export function PortalPrimaryNav({ showSetup }: { showSetup: boolean }) {
   const pathname = usePathname();
   const { t } = usePanelI18n();
 
@@ -37,7 +37,9 @@ export function PortalPrimaryNav() {
       aria-label="Customer portal navigation"
       className="order-3 flex w-full items-center gap-1 overflow-x-auto border-t py-2 md:order-none md:w-auto md:border-0 md:py-0"
     >
-      {items.map((item) => {
+      {items
+        .filter((item) => showSetup || item.href !== "/portal/welcome")
+        .map((item) => {
         const Icon = item.icon;
         const isActive = item.active(pathname);
         return (
@@ -56,7 +58,7 @@ export function PortalPrimaryNav() {
             {t(item.label)}
           </Link>
         );
-      })}
+        })}
     </nav>
   );
 }

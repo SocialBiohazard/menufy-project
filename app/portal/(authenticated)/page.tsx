@@ -59,7 +59,7 @@ export default async function PortalPage() {
           {!notifications.length && <p className="text-sm text-muted-foreground">{t("No notifications.")}</p>}
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4" /> {t("Recent changes")}</CardTitle></CardHeader><CardContent className="space-y-3">
-          {audits.map((audit) => <div key={audit.id} className="border-b pb-2 text-sm last:border-0"><p><span className="font-medium">{audit.action}</span> {audit.entityType}</p><p className="text-xs text-muted-foreground">{audit.actorEmail ?? t("System")} · {audit.createdAt.toLocaleString(locale === "ar" ? "ar" : locale === "tr" ? "tr-TR" : "en")}</p></div>)}
+          {audits.map((audit) => <div key={audit.id} className="border-b pb-2 text-sm last:border-0"><p><span className="font-medium">{t(audit.action)}</span> {t(audit.entityType)}</p><p className="text-xs text-muted-foreground">{audit.actorEmail ?? t("System")} · {audit.createdAt.toLocaleString(locale === "ar" ? "ar" : locale === "tr" ? "tr-TR" : "en")}</p></div>)}
           {!audits.length && <p className="text-sm text-muted-foreground">{t("No recorded changes yet.")}</p>}
         </CardContent></Card>
       </div>

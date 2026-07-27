@@ -1,10 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
-import { Copy, ExternalLink } from "lucide-react";
+import { useActionState, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Copy, ExternalLink, UserMinus } from "lucide-react";
 import { toast } from "sonner";
 import { changeCustomerPassword } from "@/lib/actions/customer-auth";
-import { inviteCustomerStaff } from "@/lib/actions/customers";
+import {
+  inviteCustomerStaff,
+  removeOwnedMembership,
+  updateOwnedMembership,
+} from "@/lib/actions/customers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +42,11 @@ export function InviteStaffForm({
   restaurants: Array<{ id: string; businessName: string }>;
 }) {
   const { t } = usePanelI18n();
+  const router = useRouter();
   const [state, action, pending] = useActionState(inviteCustomerStaff, initialManagement);
+  useEffect(() => {
+    if (state.activationPath) router.refresh();
+  }, [router, state.activationPath]);
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">{t("Invite restaurant staff")}</CardTitle></CardHeader>
@@ -104,5 +113,126 @@ export function InviteStaffForm({
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+export function CustomerMemberAccessControls({
+  currentUserId,
+  users,
+}: {
+  currentUserId: string;
+  users: Array<{
+    id: string;
+    name: string | null;
+    email: string;
+    memberships: Array<{
+      id: string;
+      role: "OWNER" | "EDITOR" | "VIEWER";
+      restaurant: { businessName: string };
+    }>;
+  }>;
+}) {
+  const { t } = usePanelI18n();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [roles, setRoles] = useState<Record<string, "OWNER" | "EDITOR" | "VIEWER">>(
+    () =>
+      Object.fromEntries(
+        users.flatMap((user) =>
+          user.memberships.map((membership) => [membership.id, membership.role]),
+        ),
+      ),
+  );
+  const run = (
+    operation: () => Promise<{ ok: true } | { ok: false; error: string }>,
+    success: string,
+  ) => {
+    startTransition(async () => {
+      const result = await operation();
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success(t(success));
+      router.refresh();
+    });
+  };
+
+  return (
+    <div className="space-y-3">
+      {users.map((user) => (
+        <div key={user.id} className="space-y-3 rounded-md border p-3">
+          <div>
+            <p className="font-medium">
+              {user.name || user.email}
+              {user.id === currentUserId && (
+                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                  {t("(you)")}
+                </span>
+              )}
+            </p>
+            {user.name && <p className="text-sm text-muted-foreground">{user.email}</p>}
+          </div>
+          {user.memberships.map((membership) => (
+            <div key={membership.id} className="grid gap-2 sm:grid-cols-[1fr_9rem_auto_auto] sm:items-center">
+              <span className="text-sm">{membership.restaurant.businessName}</span>
+              <select
+                value={roles[membership.id] ?? membership.role}
+                disabled={pending || user.id === currentUserId}
+                onChange={(event) =>
+                  setRoles((current) => ({
+                    ...current,
+                    [membership.id]: event.target.value as "OWNER" | "EDITOR" | "VIEWER",
+                  }))
+                }
+                className="h-9 rounded-md border bg-background px-2 text-sm disabled:opacity-60"
+              >
+                <option value="OWNER">{t("Owner")}</option>
+                <option value="EDITOR">{t("Editor")}</option>
+                <option value="VIEWER">{t("Viewer")}</option>
+              </select>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={
+                  pending ||
+                  user.id === currentUserId ||
+                  roles[membership.id] === membership.role
+                }
+                onClick={() =>
+                  run(
+                    () =>
+                      updateOwnedMembership(
+                        membership.id,
+                        roles[membership.id] ?? membership.role,
+                      ),
+                    "Role updated",
+                  )
+                }
+              >
+                {t("Update")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="text-destructive"
+                disabled={pending || user.id === currentUserId}
+                onClick={() =>
+                  run(
+                    () => removeOwnedMembership(membership.id),
+                    "Access removed",
+                  )
+                }
+              >
+                <UserMinus className="size-4" />
+                {t("Remove")}
+              </Button>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
   );
 }

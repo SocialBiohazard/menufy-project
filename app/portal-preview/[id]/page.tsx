@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { MenuTemplate } from "@/components/menu/MenuTemplate";
+import { DraftPreviewTracker } from "@/components/customer/DraftPreviewTracker";
 import { Button } from "@/components/ui/button";
 import { requireRestaurantAccess } from "@/lib/authorization";
 import { currentMenuData } from "@/lib/menu";
@@ -21,6 +22,7 @@ export default async function CustomerDraftPreviewPage({
       : `/portal/restaurants/${id}/menu`;
   return (
     <>
+      <DraftPreviewTracker restaurantId={id} />
       <div className="fixed inset-x-0 top-0 z-[100] flex items-center justify-between gap-3 bg-amber-300 px-3 py-2 text-sm text-amber-950 shadow-md">
         <p className="font-semibold">Draft preview — diners cannot see these changes yet.</p>
         <Button

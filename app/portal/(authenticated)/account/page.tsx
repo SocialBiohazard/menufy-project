@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChangePasswordForm,
+  CustomerMemberAccessControls,
   InviteStaffForm,
 } from "@/components/customer/CustomerAccountForms";
 import { requireCustomerUser } from "@/lib/customer-auth";
@@ -59,12 +60,21 @@ export default async function CustomerAccountPage() {
         <Card>
           <CardHeader><CardTitle className="text-base">{t("People and access")}</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {users.map((user) => (
-              <div key={user.id} className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 last:border-0">
-                <div><p className="font-medium">{user.name || user.email}</p>{user.name && <p className="text-sm text-muted-foreground">{user.email}</p>}</div>
-                <div className="flex flex-wrap gap-1">{user.memberships.map((membership) => <Badge key={membership.id} variant="secondary">{membership.restaurant.businessName}: {membership.role.toLowerCase()}</Badge>)}</div>
-              </div>
-            ))}
+            <CustomerMemberAccessControls
+              currentUserId={customer.id}
+              users={users.map((user) => ({
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                memberships: user.memberships.map((membership) => ({
+                  id: membership.id,
+                  role: membership.role,
+                  restaurant: {
+                    businessName: membership.restaurant.businessName,
+                  },
+                })),
+              }))}
+            />
             {!users.length && <p className="text-sm text-muted-foreground">{t("No activated users for the locations you own.")}</p>}
           </CardContent>
         </Card>

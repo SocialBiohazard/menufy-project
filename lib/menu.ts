@@ -39,6 +39,13 @@ function hydrateSnapshot(value: unknown): MenuData | null {
   return menu as MenuData;
 }
 
+export function dinerMenu(menu: MenuData | null): MenuData | null {
+  if (!menu) return null;
+  const categories = menu.categories.filter((category) => category.items.length > 0);
+  if (!categories.length) return null;
+  return { ...menu, categories };
+}
+
 export async function currentMenuData(id: string): Promise<MenuData | null> {
   return prisma.restaurant.findUnique({ where: { id }, include: menuInclude });
 }
@@ -61,7 +68,7 @@ export async function getPublishedRestaurant(slug: string): Promise<MenuData | n
     select: { id: true, publishedSnapshot: true },
   });
   if (!restaurant) return null;
-  return hydrateSnapshot(restaurant.publishedSnapshot);
+  return dinerMenu(hydrateSnapshot(restaurant.publishedSnapshot));
 }
 
 /** Development-only visual fixture lookup. Callers must enforce the env guard. */
@@ -79,7 +86,7 @@ export async function getPublishedRestaurantByHostname(hostname: string): Promis
     select: { id: true, publishedSnapshot: true },
   });
   if (!restaurant) return null;
-  return hydrateSnapshot(restaurant.publishedSnapshot);
+  return dinerMenu(hydrateSnapshot(restaurant.publishedSnapshot));
 }
 
 /** Development-only hostname fixture lookup. */

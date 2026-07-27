@@ -97,11 +97,11 @@ export const ImageField = forwardRef<ImageFieldHandle, {
         </div>
         <div className="flex flex-col gap-1.5">
           <Button
+            type="button"
             size="sm"
             variant="outline"
             disabled={pending}
-            nativeButton={false}
-            render={<label htmlFor={inputId} />}
+            onClick={() => inputRef.current?.click()}
           >
             {t(value ? "Replace" : "Upload")}
           </Button>
@@ -128,7 +128,7 @@ export const ImageField = forwardRef<ImageFieldHandle, {
           ref={inputRef}
           type="file"
           accept="image/png,image/jpeg,image/webp"
-          className="sr-only"
+          className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) onFile(file);

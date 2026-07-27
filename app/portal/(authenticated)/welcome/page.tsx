@@ -24,6 +24,7 @@ type SetupStep = {
   action: string;
   icon: typeof Check;
   external?: boolean;
+  available?: boolean;
 };
 
 export default async function CustomerWelcomePage() {
@@ -39,6 +40,24 @@ export default async function CustomerWelcomePage() {
     },
     orderBy: { businessName: "asc" },
   });
+  const previewAudits = await prisma.auditLog.findMany({
+    where: {
+      restaurantId: { in: editableRestaurantIds },
+      action: "PREVIEW",
+      entityType: "Restaurant",
+    },
+    orderBy: { createdAt: "desc" },
+    select: { restaurantId: true, createdAt: true },
+  });
+  const latestPreviewByRestaurant = new Map<string, Date>();
+  for (const preview of previewAudits) {
+    if (
+      preview.restaurantId &&
+      !latestPreviewByRestaurant.has(preview.restaurantId)
+    ) {
+      latestPreviewByRestaurant.set(preview.restaurantId, preview.createdAt);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -59,6 +78,18 @@ export default async function CustomerWelcomePage() {
         const hasMenu = restaurant.categories.some(
           (category) => category._count.items > 0,
         );
+        const latestPreview = latestPreviewByRestaurant.get(restaurant.id);
+        const hasCurrentPreview = Boolean(
+          latestPreview &&
+          (!restaurant.draftUpdatedAt ||
+            latestPreview >= restaurant.draftUpdatedAt),
+        );
+        const hasCurrentPublication = Boolean(
+          restaurant.isPublished &&
+          restaurant.publishedAt &&
+          (!restaurant.draftUpdatedAt ||
+            restaurant.publishedAt >= restaurant.draftUpdatedAt),
+        );
         const steps: SetupStep[] = [
           {
             title: t("Account activated"),
@@ -77,17 +108,9 @@ export default async function CustomerWelcomePage() {
             icon: Store,
           },
           {
-            title: t("Add your branding"),
-            description: t("Upload the restaurant logo and optional imagery."),
-            complete: hasBranding,
-            href: `/portal/restaurants/${restaurant.id}#branding`,
-            action: t("Add branding"),
-            icon: ImageIcon,
-          },
-          {
             title: t("Build the menu"),
             description: t("Create categories, products, prices, translations, and dietary details."),
-            complete: hasMenu,
+            complete: hasCurrentPreview,
             href: `/portal/restaurants/${restaurant.id}/menu`,
             action: t("Open menu builder"),
             icon: LayoutList,
@@ -104,12 +127,17 @@ export default async function CustomerWelcomePage() {
           {
             title: t("Publish"),
             description: t("Make the reviewed draft available to diners."),
-            complete: restaurant.isPublished,
+            complete: hasCurrentPublication,
             href: "/portal",
             action: t("Review and publish"),
             icon: Rocket,
           },
         ];
+        let previousComplete = true;
+        for (const step of steps) {
+          step.available = previousComplete || step.complete;
+          previousComplete = previousComplete && step.complete;
+        }
         const nextIndex = steps.findIndex((step) => !step.complete);
         const completed = steps.filter((step) => step.complete).length;
 
@@ -143,13 +171,33 @@ export default async function CustomerWelcomePage() {
                         <div className="flex items-center gap-2"><p className="font-medium">{index + 1}. {step.title}</p>{isNext && <Badge>{t("Next")}</Badge>}</div>
                         <p className="text-sm text-muted-foreground">{step.description}</p>
                       </div>
-                      <Button size="sm" variant={isNext ? "default" : "outline"} nativeButton={false} render={<Link href={step.href} target={step.external ? "_blank" : undefined} />}>
-                        {step.action}
-                      </Button>
+                      {step.available ? (
+                        <Button size="sm" variant={isNext ? "default" : "outline"} nativeButton={false} render={<Link href={step.href} target={step.external ? "_blank" : undefined} />}>
+                          {step.action}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" disabled>
+                          {step.action}
+                        </Button>
+                      )}
                     </li>
                   );
                 })}
               </ol>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-dashed p-4">
+                <div className="flex items-start gap-3">
+                  <ImageIcon className="mt-0.5 size-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{t("Optional: add your branding")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t("Upload a logo, cover, and splash imagery whenever you are ready.")}
+                    </p>
+                  </div>
+                </div>
+                <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/portal/restaurants/${restaurant.id}#branding`} />}>
+                  {t(hasBranding ? "Review branding" : "Add branding")}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         );

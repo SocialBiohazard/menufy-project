@@ -20,7 +20,11 @@ export default async function PortalLayout({ children }: { children: React.React
             <Building2 className="size-5 shrink-0" />
             <span className="max-w-48 truncate">{user.account.name}</span>
           </Link>
-          <PortalPrimaryNav />
+          <PortalPrimaryNav
+            showSetup={user.memberships.some(
+              (membership) => membership.role !== "VIEWER",
+            )}
+          />
           <div className="ml-auto flex items-center gap-2">
           <PanelLanguageSwitcher compact />
           <CustomerSignOutButton />

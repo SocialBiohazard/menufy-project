@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
-import { DEFAULT_CATEGORIES } from "@/lib/default-menu";
 import { requireOperator } from "@/lib/auth";
 import { requireRestaurantAccess } from "@/lib/authorization";
 import { notifyRestaurantMembers, recordAudit } from "@/lib/activity";
@@ -42,12 +41,6 @@ export async function createRestaurant(
       slug,
       businessType: businessType || null,
       templateType,
-      categories: {
-        create: DEFAULT_CATEGORIES.map((category, sortOrder) => ({
-          ...category,
-          sortOrder,
-        })),
-      },
     },
   });
 
@@ -265,11 +258,45 @@ export async function togglePublish(
   return { ok: true };
 }
 
+export async function recordDraftPreview(id: string): Promise<ActionResult> {
+  const actor = await requireRestaurantAccess(id, "VIEWER");
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id },
+    select: { draftUpdatedAt: true },
+  });
+  if (!restaurant) return { ok: false, error: "Restaurant not found" };
+  const latestPreview = await prisma.auditLog.findFirst({
+    where: {
+      restaurantId: id,
+      action: "PREVIEW",
+      entityType: "Restaurant",
+    },
+    orderBy: { createdAt: "desc" },
+    select: { createdAt: true },
+  });
+  if (
+    !latestPreview ||
+    (restaurant.draftUpdatedAt &&
+      latestPreview.createdAt < restaurant.draftUpdatedAt)
+  ) {
+    await recordAudit({
+      actor,
+      restaurantId: id,
+      action: "PREVIEW",
+      entityType: "Restaurant",
+      entityId: id,
+    });
+  }
+  revalidatePath("/portal/welcome");
+  return { ok: true };
+}
+
 export async function deleteRestaurant(id: string): Promise<ActionResult> {
   const operator = await requireOperator();
   const media = await prisma.restaurant.findUnique({
     where: { id },
     select: {
+      customerAccountId: true,
       logo: true,
       coverImage: true,
       splashImage: true,
@@ -281,6 +308,19 @@ export async function deleteRestaurant(id: string): Promise<ActionResult> {
       },
     },
   });
+  if (!media) return { ok: false, error: "Restaurant not found" };
+  if (media.customerAccountId) {
+    const accountLocationCount = await prisma.restaurant.count({
+      where: { customerAccountId: media.customerAccountId },
+    });
+    if (accountLocationCount <= 1) {
+      return {
+        ok: false,
+        error:
+          "This is a customer workspace's final location. Delete the workspace or assign another location first.",
+      };
+    }
+  }
   const r = await prisma.restaurant.delete({
     where: { id },
     select: { slug: true },

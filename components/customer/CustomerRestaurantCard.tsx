@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { ExternalLink, LayoutList, Settings } from "lucide-react";
+import { ExternalLink, Eye, LayoutList, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { togglePublish } from "@/lib/actions/restaurant";
 import { publicMenuUrl } from "@/lib/public-url";
@@ -81,6 +81,19 @@ export function CustomerRestaurantCard({
         )}
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          nativeButton={false}
+          render={
+            <Link
+              href={`/portal-preview/${restaurant.id}?screen=menu`}
+              target="_blank"
+            />
+          }
+        >
+          <Eye className="size-4" /> {t("Preview draft")}
+        </Button>
         {canEdit && (
           <>
             <Button size="sm" variant="secondary" nativeButton={false} render={<Link href={`/portal/restaurants/${restaurant.id}/menu`} />}>

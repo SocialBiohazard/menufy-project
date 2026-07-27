@@ -12,6 +12,10 @@ export type CustomerManagementState = {
   activationPath: string | null;
 };
 
+export type CustomerOperationResult =
+  | { ok: true }
+  | { ok: false; error: string };
+
 function activationUrl(token: string) {
   const origin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, "");
   return origin ? `${origin}/activate/${token}` : `/activate/${token}`;
@@ -151,6 +155,7 @@ export async function inviteCustomerStaff(
       expiresAt: new Date(Date.now() + 7 * 86_400_000),
     },
   });
+  revalidatePath("/portal/account");
   return { error: null, activationPath: activationUrl(token) };
 }
 
@@ -258,6 +263,213 @@ export async function assignRestaurantToCustomer(
   revalidatePath("/dashboard/customers");
   revalidatePath("/portal");
   return { error: null, activationPath: null };
+}
+
+export async function unassignRestaurantFromCustomer(
+  accountId: string,
+  restaurantId: string,
+): Promise<CustomerOperationResult> {
+  await requireOperator();
+  const restaurant = await prisma.restaurant.findUnique({
+    where: { id: restaurantId },
+    select: { customerAccountId: true },
+  });
+  if (!restaurant || restaurant.customerAccountId !== accountId) {
+    return { ok: false, error: "That location is not assigned to this workspace" };
+  }
+  const locationCount = await prisma.restaurant.count({
+    where: { customerAccountId: accountId },
+  });
+  if (locationCount <= 1) {
+    return {
+      ok: false,
+      error: "Delete the workspace to release its final location",
+    };
+  }
+  await prisma.$transaction([
+    prisma.restaurantMembership.deleteMany({ where: { restaurantId } }),
+    prisma.customerInvitation.deleteMany({
+      where: {
+        customerAccountId: accountId,
+        acceptedAt: null,
+        restaurantIds: { has: restaurantId },
+      },
+    }),
+    prisma.restaurant.update({
+      where: { id: restaurantId },
+      data: { customerAccountId: null },
+    }),
+  ]);
+  revalidatePath("/dashboard/customers");
+  revalidatePath("/portal");
+  revalidatePath("/portal/account");
+  return { ok: true };
+}
+
+const membershipRoleSchema = z.enum(["OWNER", "EDITOR", "VIEWER"]);
+
+export async function updateCustomerMembership(
+  membershipId: string,
+  role: string,
+): Promise<CustomerOperationResult> {
+  await requireOperator();
+  const parsedRole = membershipRoleSchema.safeParse(role);
+  if (!parsedRole.success) return { ok: false, error: "Select a valid role" };
+  const membership = await prisma.restaurantMembership.findUnique({
+    where: { id: membershipId },
+    select: { restaurant: { select: { customerAccountId: true } } },
+  });
+  if (!membership?.restaurant.customerAccountId) {
+    return { ok: false, error: "Membership not found" };
+  }
+  const currentMembership = await prisma.restaurantMembership.findUnique({
+    where: { id: membershipId },
+    select: { role: true, restaurantId: true },
+  });
+  if (
+    currentMembership?.role === "OWNER" &&
+    parsedRole.data !== "OWNER" &&
+    (await prisma.restaurantMembership.count({
+      where: { restaurantId: currentMembership.restaurantId, role: "OWNER" },
+    })) <= 1
+  ) {
+    return { ok: false, error: "Assign another owner before changing this role" };
+  }
+  await prisma.restaurantMembership.update({
+    where: { id: membershipId },
+    data: { role: parsedRole.data },
+  });
+  revalidatePath("/dashboard/customers");
+  revalidatePath("/portal");
+  revalidatePath("/portal/account");
+  return { ok: true };
+}
+
+export async function removeCustomerUser(
+  accountId: string,
+  userId: string,
+): Promise<CustomerOperationResult> {
+  await requireOperator();
+  const user = await prisma.customerUser.findUnique({
+    where: { id: userId },
+    select: {
+      accountId: true,
+      memberships: {
+        where: { role: "OWNER" },
+        select: { restaurantId: true },
+      },
+    },
+  });
+  if (!user || user.accountId !== accountId) {
+    return { ok: false, error: "User not found in this workspace" };
+  }
+  for (const membership of user.memberships) {
+    const ownerCount = await prisma.restaurantMembership.count({
+      where: { restaurantId: membership.restaurantId, role: "OWNER" },
+    });
+    if (ownerCount <= 1) {
+      return {
+        ok: false,
+        error: "Assign another owner to every location before revoking this user",
+      };
+    }
+  }
+  await prisma.customerUser.delete({ where: { id: userId } });
+  revalidatePath("/dashboard/customers");
+  revalidatePath("/portal");
+  revalidatePath("/portal/account");
+  return { ok: true };
+}
+
+export async function deleteCustomerWorkspace(
+  accountId: string,
+  confirmationName: string,
+): Promise<CustomerOperationResult> {
+  await requireOperator();
+  const account = await prisma.customerAccount.findUnique({
+    where: { id: accountId },
+    select: { name: true },
+  });
+  if (!account) return { ok: false, error: "Workspace not found" };
+  if (confirmationName.trim() !== account.name) {
+    return { ok: false, error: "The workspace name did not match" };
+  }
+  await prisma.$transaction(async (tx) => {
+    await tx.restaurant.updateMany({
+      where: { customerAccountId: accountId },
+      data: { customerAccountId: null },
+    });
+    await tx.customerAccount.delete({ where: { id: accountId } });
+  });
+  revalidatePath("/dashboard/customers");
+  revalidatePath("/portal");
+  return { ok: true };
+}
+
+async function requireOwnedMembership(membershipId: string) {
+  const customer = await requireCustomerUser();
+  const membership = await prisma.restaurantMembership.findUnique({
+    where: { id: membershipId },
+    include: { customerUser: { select: { accountId: true } } },
+  });
+  if (!membership || membership.customerUser.accountId !== customer.accountId) {
+    return { customer, membership: null };
+  }
+  const ownsRestaurant = customer.memberships.some(
+    (entry) =>
+      entry.restaurantId === membership.restaurantId && entry.role === "OWNER",
+  );
+  return { customer, membership: ownsRestaurant ? membership : null };
+}
+
+export async function updateOwnedMembership(
+  membershipId: string,
+  role: string,
+): Promise<CustomerOperationResult> {
+  const parsedRole = membershipRoleSchema.safeParse(role);
+  if (!parsedRole.success) return { ok: false, error: "Select a valid role" };
+  const { customer, membership } = await requireOwnedMembership(membershipId);
+  if (!membership) return { ok: false, error: "You cannot manage that access" };
+  if (membership.customerUserId === customer.id) {
+    return { ok: false, error: "You cannot change your own access" };
+  }
+  if (membership.role === "OWNER" && parsedRole.data !== "OWNER") {
+    const ownerCount = await prisma.restaurantMembership.count({
+      where: { restaurantId: membership.restaurantId, role: "OWNER" },
+    });
+    if (ownerCount <= 1) {
+      return { ok: false, error: "Each location must keep at least one owner" };
+    }
+  }
+  await prisma.restaurantMembership.update({
+    where: { id: membershipId },
+    data: { role: parsedRole.data },
+  });
+  revalidatePath("/portal");
+  revalidatePath("/portal/account");
+  return { ok: true };
+}
+
+export async function removeOwnedMembership(
+  membershipId: string,
+): Promise<CustomerOperationResult> {
+  const { customer, membership } = await requireOwnedMembership(membershipId);
+  if (!membership) return { ok: false, error: "You cannot manage that access" };
+  if (membership.customerUserId === customer.id) {
+    return { ok: false, error: "You cannot remove your own access" };
+  }
+  if (membership.role === "OWNER") {
+    const ownerCount = await prisma.restaurantMembership.count({
+      where: { restaurantId: membership.restaurantId, role: "OWNER" },
+    });
+    if (ownerCount <= 1) {
+      return { ok: false, error: "Each location must keep at least one owner" };
+    }
+  }
+  await prisma.restaurantMembership.delete({ where: { id: membershipId } });
+  revalidatePath("/portal");
+  revalidatePath("/portal/account");
+  return { ok: true };
 }
 
 export async function markCustomerNotificationsRead() {

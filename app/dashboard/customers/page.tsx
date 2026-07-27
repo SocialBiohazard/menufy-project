@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, Bell, Building2, Plus, Users } from "lucide-react";
 import {
   AssignRestaurantForm,
+  CustomerAccountLifecycle,
   CustomerAccountSettings,
 } from "@/components/admin/CustomerAccountControls";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,7 @@ export default async function CustomerManagementPage() {
                 <div><p className="font-medium">{t("Locations")}</p><p className="text-muted-foreground">{account.restaurants.map((restaurant) => restaurant.businessName).join(", ") || t("None")}</p></div>
                 <div><p className="font-medium">{t("Activated users")}</p><p className="text-muted-foreground">{account.users.map((user) => user.email).join(", ") || t("None yet")}</p></div>
               </div>
-              <CustomerAccountSettings account={{
+              <CustomerAccountSettings key={`${account.updatedAt.toISOString()}-${account.isActive}`} account={{
                 id: account.id,
                 plan: account.plan,
                 maxRestaurants: account.maxRestaurants,
@@ -84,12 +85,24 @@ export default async function CustomerManagementPage() {
                 ),
                 isActive: account.isActive,
               }} />
-              {account.users.length > 0 && (
-                <div className="space-y-2">
-                  <p className="flex items-center gap-2 text-sm font-medium"><Users className="size-4" /> {t("Access")}</p>
-                  {account.users.map((user) => <div key={user.id} className="flex flex-wrap justify-between gap-2 text-sm"><span>{user.email}</span><span className="text-muted-foreground">{user.memberships.map((membership) => `${membership.restaurant.businessName} (${t(membership.role.toLowerCase())})`).join(", ") || t("No locations")}</span></div>)}
-                </div>
-              )}
+              <CustomerAccountLifecycle account={{
+                id: account.id,
+                name: account.name,
+                restaurants: account.restaurants.map(({ id, businessName }) => ({ id, businessName })),
+                users: account.users.map((user) => ({
+                  id: user.id,
+                  email: user.email,
+                  name: user.name,
+                  memberships: user.memberships.map((membership) => ({
+                    id: membership.id,
+                    role: membership.role,
+                    restaurant: {
+                      id: membership.restaurantId,
+                      businessName: membership.restaurant.businessName,
+                    },
+                  })),
+                })),
+              }} />
               {account.invitations.length > 0 && <p className="text-xs text-muted-foreground">{account.invitations.filter((invite) => !invite.acceptedAt && invite.expiresAt > new Date()).length} {t("pending invitation(s)")}</p>}
             </CardContent>
           </Card>
