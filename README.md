@@ -59,7 +59,8 @@ npm run build
 The application runs as a persistent Next.js Node server, not as serverless functions.
 
 1. Create a Railway project from this repository.
-2. Add a Railway PostgreSQL service and reference its connection variables.
+2. Add a Railway PostgreSQL service and expose its `DATABASE_URL` to the app
+   service. `DIRECT_URL` is optional and migrations fall back to `DATABASE_URL`.
 3. Add a Railway storage bucket and inject its `AWS_*` credentials.
 4. Set `MEDIA_STORAGE_DRIVER=s3`.
 5. Generate a Railway public domain and set `NEXT_PUBLIC_SITE_URL`.

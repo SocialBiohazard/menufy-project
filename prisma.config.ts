@@ -11,6 +11,6 @@ export default defineConfig({
   // Migrate/CLI uses the DIRECT (non-pooled) connection — pgBouncer can't run
   // migration DDL. The app runtime uses DATABASE_URL via a driver adapter.
   datasource: {
-    url: process.env["DIRECT_URL"],
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });
