@@ -145,7 +145,18 @@ export function CustomerManagementForm({
                   </label>
                 ))}
               </div>
-              {!restaurants.length && <p className="rounded-md border border-dashed p-6 text-center text-muted-foreground">{t("Every restaurant is already assigned.")}</p>}
+              {!restaurants.length && (
+                <div className="flex flex-col items-center gap-3 rounded-md border border-dashed p-6 text-center">
+                  <p className="text-muted-foreground">{t("Every restaurant is already assigned.")}</p>
+                  <Button
+                    nativeButton={false}
+                    variant="outline"
+                    render={<Link href="/dashboard/restaurants/new" />}
+                  >
+                    {t("New restaurant")}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 

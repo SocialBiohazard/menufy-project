@@ -1,8 +1,8 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MenuBuilder } from "@/components/admin/MenuBuilder";
 import { RestaurantWorkspaceHeader } from "@/components/shared/RestaurantWorkspaceHeader";
 import { getRestaurantForEdit } from "@/lib/admin-data";
-import { requireRestaurantAccess } from "@/lib/authorization";
+import { getRestaurantAccess } from "@/lib/authorization";
 import { toBuilderCategory } from "@/lib/builder-types";
 import { prisma } from "@/lib/prisma";
 import { publicMenuUrl } from "@/lib/public-url";
@@ -13,7 +13,8 @@ export default async function CustomerMenuBuilderPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireRestaurantAccess(id, "EDITOR");
+  const actor = await getRestaurantAccess(id, "EDITOR");
+  if (!actor) redirect("/portal");
   const [restaurant, allergens] = await Promise.all([
     getRestaurantForEdit(id),
     prisma.allergen.findMany({ orderBy: { id: "asc" } }),

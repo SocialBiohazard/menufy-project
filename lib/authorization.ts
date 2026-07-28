@@ -28,10 +28,10 @@ export async function requireAuthenticatedActor(): Promise<AppActor> {
   return actor;
 }
 
-export async function requireRestaurantAccess(
+export async function getRestaurantAccess(
   restaurantId: string,
   minimumRole: CustomerRole = "VIEWER",
-): Promise<AppActor> {
+): Promise<AppActor | null> {
   const operator = await getOperator();
   if (operator) return { type: "OPERATOR", ...operator, role: "OPERATOR" };
 
@@ -44,7 +44,7 @@ export async function requireRestaurantAccess(
     !membership ||
     !roleAllows(membership.role, minimumRole)
   ) {
-    throw new Error("You do not have permission for this restaurant");
+    return null;
   }
   return {
     type: "CUSTOMER",
@@ -52,4 +52,13 @@ export async function requireRestaurantAccess(
     email: customer.email,
     role: membership.role,
   };
+}
+
+export async function requireRestaurantAccess(
+  restaurantId: string,
+  minimumRole: CustomerRole = "VIEWER",
+): Promise<AppActor> {
+  const actor = await getRestaurantAccess(restaurantId, minimumRole);
+  if (!actor) throw new Error("You do not have permission for this restaurant");
+  return actor;
 }

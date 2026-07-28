@@ -1,7 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { CoreEditorForm } from "@/components/admin/CoreEditorForm";
 import { RestaurantWorkspaceHeader } from "@/components/shared/RestaurantWorkspaceHeader";
-import { requireRestaurantAccess } from "@/lib/authorization";
+import { getRestaurantAccess } from "@/lib/authorization";
 import { restaurantToCoreFormData } from "@/lib/core-form-data";
 import { prisma } from "@/lib/prisma";
 import { publicMenuUrl } from "@/lib/public-url";
@@ -12,7 +12,8 @@ export default async function CustomerRestaurantSettingsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  await requireRestaurantAccess(id, "EDITOR");
+  const actor = await getRestaurantAccess(id, "EDITOR");
+  if (!actor) redirect("/portal");
   const restaurant = await prisma.restaurant.findUnique({ where: { id } });
   if (!restaurant) notFound();
   const publicHref = publicMenuUrl({
