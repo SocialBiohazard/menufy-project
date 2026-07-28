@@ -78,9 +78,9 @@ export async function getOperator() {
   };
 }
 
-/** Require an explicitly allowlisted operator; redirect to /login otherwise. */
+/** Require an explicitly allowlisted operator; redirect to sign-in otherwise. */
 export async function requireOperator() {
   const operator = await getOperator();
-  if (!operator) redirect("/login?error=unauthorized");
+  if (!operator) redirect("/login");
   return operator;
 }
