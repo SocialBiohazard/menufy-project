@@ -16,6 +16,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-inci-preview": "tsx prisma/seed-inci-preview.ts",
+    "db:seed-inci-production": "tsx scripts/seed-inci-production.ts",
     "db:studio": "prisma studio",
     "db:local:start": "node scripts/local-postgres.mjs start",
     "db:local:stop": "node scripts/local-postgres.mjs stop",
