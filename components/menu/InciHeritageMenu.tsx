@@ -16,6 +16,7 @@ import {
   Star,
 } from "lucide-react";
 import type { MenuData, MenuItem } from "@/lib/menu";
+import { isManagedMediaUrl } from "@/lib/media-url";
 import { formatPrice, isRtl, LANG_LABELS, pick, type Lang } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { themeToCssVars, type ThemeTokens } from "@/lib/themes";
@@ -256,7 +257,15 @@ export function InciHeritageMenu({
           />
           <div className="mt-5 flex size-32 items-center justify-center rounded-full border border-[#d5a95d]/70 bg-[#fff8ea] p-2 text-[#681a27] shadow-[0_20px_70px_rgba(25,4,8,.52)] sm:mt-10 sm:size-40">
             {logo ? (
-              <Image src={logo} alt={menu.businessName} width={152} height={152} priority className="size-28 rounded-full object-contain sm:size-36" />
+              <Image
+                src={logo}
+                alt={menu.businessName}
+                width={152}
+                height={152}
+                priority
+                className="size-28 rounded-full object-contain sm:size-36"
+                unoptimized={isManagedMediaUrl(logo)}
+              />
             ) : (
               <span className="font-display text-4xl font-semibold">{businessInitials(menu.businessName)}</span>
             )}
@@ -300,7 +309,14 @@ export function InciHeritageMenu({
             >
               <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[#fff8ea] p-1 text-[#681a27] shadow-lg">
                 {logo ? (
-                  <Image src={logo} alt="" width={60} height={60} className="size-14 rounded-full object-contain" />
+                  <Image
+                    src={logo}
+                    alt=""
+                    width={60}
+                    height={60}
+                    className="size-14 rounded-full object-contain"
+                    unoptimized={isManagedMediaUrl(logo)}
+                  />
                 ) : (
                   <span className="font-display text-lg font-semibold">{businessInitials(menu.businessName)}</span>
                 )}
@@ -439,7 +455,14 @@ function CategoryGrid({
             className="group relative min-h-48 overflow-hidden rounded-[1.4rem] bg-[#681a27] text-start shadow-[0_18px_50px_-30px_rgba(69,13,22,.8)] transition hover:-translate-y-1 hover:shadow-[0_24px_55px_-28px_rgba(69,13,22,.9)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#882634] motion-reduce:transform-none sm:min-h-72"
           >
             {image ? (
-              <Image src={image} alt="" fill sizes="(max-width: 640px) 50vw, 33vw" className="object-cover transition duration-700 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none" />
+              <Image
+                src={image}
+                alt=""
+                fill
+                sizes="(max-width: 640px) 50vw, 33vw"
+                className="object-cover transition duration-700 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
+                unoptimized={isManagedMediaUrl(image)}
+              />
             ) : (
               <div className="absolute inset-0" style={{ background: CATEGORY_FALLBACKS[index % CATEGORY_FALLBACKS.length] }}>
                 <span className="absolute end-4 top-3 font-display text-6xl font-semibold text-[#fff4d9]/8 sm:text-7xl">
@@ -500,7 +523,14 @@ function CategoryView({
             >
               {item.imageUrl ? (
                 <div className="relative w-32 shrink-0 overflow-hidden sm:w-36">
-                  <Image src={item.imageUrl} alt="" fill sizes="144px" className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none" />
+                  <Image
+                    src={item.imageUrl}
+                    alt=""
+                    fill
+                    sizes="144px"
+                    className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
+                    unoptimized={isManagedMediaUrl(item.imageUrl)}
+                  />
                 </div>
               ) : (
                 <div className="relative flex w-24 shrink-0 items-center justify-center overflow-hidden bg-[linear-gradient(145deg,#932d3e,#641722)] text-[#e3bd73]">
@@ -569,7 +599,14 @@ function ItemDetails({
           <>
             {item.imageUrl && (
               <div className="relative h-60 w-full overflow-hidden rounded-t-lg sm:h-72">
-                <Image src={item.imageUrl} alt="" fill sizes="576px" className="object-cover" />
+                <Image
+                  src={item.imageUrl}
+                  alt=""
+                  fill
+                  sizes="576px"
+                  className="object-cover"
+                  unoptimized={isManagedMediaUrl(item.imageUrl)}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#3d0c14]/55 to-transparent" />
               </div>
             )}

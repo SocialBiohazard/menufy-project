@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import type { MenuData } from "@/lib/menu";
+import { isManagedMediaUrl } from "@/lib/media-url";
 import { type Lang, LANG_LABELS, UI, isRtl, pick } from "@/lib/i18n";
 import { type ThemeTokens, themeToCssVars } from "@/lib/themes";
 import { ItemCard } from "./ItemCard";
@@ -142,7 +143,15 @@ function Hero({
       style={{ height: "var(--menu-hero-height)" }}
     >
       {menu.coverImage ? (
-        <Image src={menu.coverImage} alt="" fill priority sizes="100vw" className="object-cover" />
+        <Image
+          src={menu.coverImage}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          unoptimized={isManagedMediaUrl(menu.coverImage)}
+        />
       ) : (
         <div
           className="absolute inset-0"
@@ -179,6 +188,7 @@ function Hero({
               width={72}
               height={72}
               className="h-full w-full object-cover"
+              unoptimized={isManagedMediaUrl(menu.logo)}
             />
           </div>
         )}

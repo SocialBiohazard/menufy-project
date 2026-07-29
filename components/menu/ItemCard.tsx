@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties } from "react";
 import type { MenuItem } from "@/lib/menu";
+import { isManagedMediaUrl } from "@/lib/media-url";
 import { type Lang, UI, pick, formatPrice } from "@/lib/i18n";
 
 const softAccent = "color-mix(in oklab, var(--menu-accent) 14%, transparent)";
@@ -37,7 +38,14 @@ export function ItemCard({
           className="relative h-24 w-24 shrink-0 overflow-hidden"
           style={{ borderRadius: "calc(var(--menu-radius-card) - 6px)" }}
         >
-          <Image src={item.imageUrl} alt={name} fill sizes="96px" className="object-cover" />
+          <Image
+            src={item.imageUrl}
+            alt={name}
+            fill
+            sizes="96px"
+            className="object-cover"
+            unoptimized={isManagedMediaUrl(item.imageUrl)}
+          />
         </div>
       )}
 

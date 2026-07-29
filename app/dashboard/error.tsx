@@ -16,9 +16,12 @@ export default function DashboardError({
       <p className="mt-2 text-muted-foreground">
         Your data was not changed. Try loading this screen again.
       </p>
-      <Button className="mt-5" onClick={unstable_retry}>
-        Try again
-      </Button>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        <Button onClick={unstable_retry}>Try again</Button>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Reload dashboard
+        </Button>
+      </div>
     </div>
   );
 }

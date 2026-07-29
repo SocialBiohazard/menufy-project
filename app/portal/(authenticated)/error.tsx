@@ -16,9 +16,12 @@ export default function PortalError({
       <p className="mt-2 text-muted-foreground">
         Your changes were not submitted. Try loading the screen again.
       </p>
-      <Button className="mt-5" onClick={unstable_retry}>
-        Try again
-      </Button>
+      <div className="mt-5 flex flex-wrap justify-center gap-2">
+        <Button onClick={unstable_retry}>Try again</Button>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Reload page
+        </Button>
+      </div>
     </div>
   );
 }
