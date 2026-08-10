@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/dialog";
 
 const EMPTY = {
-  name: "", nameEn: "", nameAr: "", nameRu: "",
-  description: "", descriptionEn: "", descriptionAr: "", descriptionRu: "",
+  name: "", nameEn: "", nameAr: "", nameRu: "", nameDe: "", nameFr: "", nameEs: "", nameIt: "", namePl: "", nameZh: "",
+  description: "", descriptionEn: "", descriptionAr: "", descriptionRu: "", descriptionDe: "", descriptionFr: "", descriptionEs: "", descriptionIt: "", descriptionPl: "", descriptionZh: "",
   price: "", imageUrl: "", ingredients: "", portionGrams: "",
   isNew: false, isFeatured: false, isAvailable: true, hasAlcohol: false, hasPork: false,
   allergenIds: [] as number[],
@@ -40,8 +40,8 @@ function numOrNull(s: string): number | null {
 function stateFor(editing?: BuilderItem): FormState {
   if (!editing) return { ...EMPTY, allergenIds: [] };
   return {
-    name: editing.name, nameEn: editing.nameEn, nameAr: editing.nameAr, nameRu: editing.nameRu,
-    description: editing.description, descriptionEn: editing.descriptionEn, descriptionAr: editing.descriptionAr, descriptionRu: editing.descriptionRu,
+    name: editing.name, nameEn: editing.nameEn, nameAr: editing.nameAr, nameRu: editing.nameRu, nameDe: editing.nameDe, nameFr: editing.nameFr, nameEs: editing.nameEs, nameIt: editing.nameIt, namePl: editing.namePl, nameZh: editing.nameZh,
+    description: editing.description, descriptionEn: editing.descriptionEn, descriptionAr: editing.descriptionAr, descriptionRu: editing.descriptionRu, descriptionDe: editing.descriptionDe, descriptionFr: editing.descriptionFr, descriptionEs: editing.descriptionEs, descriptionIt: editing.descriptionIt, descriptionPl: editing.descriptionPl, descriptionZh: editing.descriptionZh,
     price: String(editing.price), imageUrl: editing.imageUrl, ingredients: editing.ingredients,
     portionGrams: editing.portionGrams?.toString() ?? "",
     isNew: editing.isNew, isFeatured: editing.isFeatured, isAvailable: editing.isAvailable,
@@ -99,8 +99,8 @@ export function ItemDialog({
     e.preventDefault();
     startTransition(async () => {
       const input = {
-        name: f.name, nameEn: f.nameEn, nameAr: f.nameAr, nameRu: f.nameRu,
-        description: f.description, descriptionEn: f.descriptionEn, descriptionAr: f.descriptionAr, descriptionRu: f.descriptionRu,
+        name: f.name, nameEn: f.nameEn, nameAr: f.nameAr, nameRu: f.nameRu, nameDe: f.nameDe, nameFr: f.nameFr, nameEs: f.nameEs, nameIt: f.nameIt, namePl: f.namePl, nameZh: f.nameZh,
+        description: f.description, descriptionEn: f.descriptionEn, descriptionAr: f.descriptionAr, descriptionRu: f.descriptionRu, descriptionDe: f.descriptionDe, descriptionFr: f.descriptionFr, descriptionEs: f.descriptionEs, descriptionIt: f.descriptionIt, descriptionPl: f.descriptionPl, descriptionZh: f.descriptionZh,
         price: Number(f.price) || 0,
         portionGrams: numOrNull(f.portionGrams),
         imageUrl: f.imageUrl,
@@ -151,11 +151,11 @@ export function ItemDialog({
           />
 
           {/* Names */}
-          <FieldTrio
+          <LocalizedFields
             label="Name"
             required
-            values={[f.name, f.nameEn, f.nameAr, f.nameRu]}
-            onChange={(i, v) => set((["name", "nameEn", "nameAr", "nameRu"] as const)[i], v)}
+            values={[f.name, f.nameEn, f.nameAr, f.nameRu, f.nameDe, f.nameFr, f.nameEs, f.nameIt, f.namePl, f.nameZh]}
+            onChange={(i, v) => set((["name", "nameEn", "nameAr", "nameRu", "nameDe", "nameFr", "nameEs", "nameIt", "namePl", "nameZh"] as const)[i], v)}
           />
 
           <div className="flex flex-col gap-2">
@@ -164,6 +164,12 @@ export function ItemDialog({
             <Textarea value={f.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} placeholder="English" rows={2} />
             <Textarea value={f.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} placeholder="العربية" dir="rtl" rows={2} />
             <Textarea value={f.descriptionRu} onChange={(e) => set("descriptionRu", e.target.value)} placeholder="Русский" rows={2} />
+            <Textarea value={f.descriptionDe} onChange={(e) => set("descriptionDe", e.target.value)} placeholder="Deutsch" rows={2} />
+            <Textarea value={f.descriptionFr} onChange={(e) => set("descriptionFr", e.target.value)} placeholder="Français" rows={2} />
+            <Textarea value={f.descriptionEs} onChange={(e) => set("descriptionEs", e.target.value)} placeholder="Español" rows={2} />
+            <Textarea value={f.descriptionIt} onChange={(e) => set("descriptionIt", e.target.value)} placeholder="Italiano" rows={2} />
+            <Textarea value={f.descriptionPl} onChange={(e) => set("descriptionPl", e.target.value)} placeholder="Polski" rows={2} />
+            <Textarea value={f.descriptionZh} onChange={(e) => set("descriptionZh", e.target.value)} placeholder="简体中文" rows={2} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -275,7 +281,7 @@ export function ItemDialog({
   );
 }
 
-function FieldTrio({
+function LocalizedFields({
   label,
   required,
   values,
@@ -283,10 +289,10 @@ function FieldTrio({
 }: {
   label: string;
   required?: boolean;
-  values: [string, string, string, string];
+  values: string[];
   onChange: (i: number, v: string) => void;
 }) {
-  const ph = ["Türkçe", "English", "العربية", "Русский"];
+  const ph = ["Türkçe", "English", "العربية", "Русский", "Deutsch", "Français", "Español", "Italiano", "Polski", "简体中文"];
   return (
     <div className="flex flex-col gap-2">
       <Label>

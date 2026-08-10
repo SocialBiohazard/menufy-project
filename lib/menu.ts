@@ -45,6 +45,12 @@ const liveFooterSelect = {
   footerDescriptionEn: true,
   footerDescriptionAr: true,
   footerDescriptionRu: true,
+  footerDescriptionDe: true,
+  footerDescriptionFr: true,
+  footerDescriptionEs: true,
+  footerDescriptionIt: true,
+  footerDescriptionPl: true,
+  footerDescriptionZh: true,
   footerCopyright: true,
   footerVisibility: true,
 } satisfies Prisma.RestaurantSelect;

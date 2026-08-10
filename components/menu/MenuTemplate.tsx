@@ -1,5 +1,5 @@
 import type { MenuData } from "@/lib/menu";
-import type { Lang } from "@/lib/i18n";
+import { LANGS, type Lang } from "@/lib/i18n";
 import { resolveTheme } from "@/lib/themes";
 import { MenuView } from "./MenuView";
 import { InciHeritageMenu } from "./InciHeritageMenu";
@@ -13,7 +13,7 @@ import { InciHeritageMenu } from "./InciHeritageMenu";
 export function MenuTemplate({ menu }: { menu: MenuData }) {
   const theme = resolveTheme(menu.templateType, menu);
   const enabledLangs = (menu.enabledLangs as Lang[]).filter((l) =>
-    ["tr", "en", "ar", "ru"].includes(l),
+    LANGS.includes(l),
   );
   const defaultLang = enabledLangs.includes(menu.defaultLang as Lang)
     ? menu.defaultLang as Lang

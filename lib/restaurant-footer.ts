@@ -1,4 +1,4 @@
-import type { Lang } from "@/lib/i18n";
+import { LANGUAGE_SUFFIX, type Lang } from "@/lib/i18n";
 
 export const FOOTER_FIELD_KEYS = [
   "description",
@@ -113,13 +113,7 @@ export function hasConfiguredHours(hours: WeeklyHours): boolean {
 export function localizedLegacyHours(value: unknown, lang: Lang): string {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "";
   const record = value as Record<string, unknown>;
-  const localized = lang === "en"
-    ? record.displayEn
-    : lang === "ar"
-      ? record.displayAr
-      : lang === "ru"
-        ? record.displayRu
-        : record.display;
+  const localized = lang === "tr" ? record.display : record[`display${LANGUAGE_SUFFIX[lang]}`];
   const display = localized || record.display;
   return typeof display === "string" ? display : "";
 }

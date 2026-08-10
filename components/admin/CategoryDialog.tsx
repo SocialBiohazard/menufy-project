@@ -23,6 +23,12 @@ type SavedCategory = {
   nameEn: string | null;
   nameAr: string | null;
   nameRu: string | null;
+  nameDe: string | null;
+  nameFr: string | null;
+  nameEs: string | null;
+  nameIt: string | null;
+  namePl: string | null;
+  nameZh: string | null;
   imageUrl: string | null;
 };
 
@@ -47,13 +53,19 @@ export function CategoryDialog({
   const [nameEn, setNameEn] = useState(editing?.nameEn ?? "");
   const [nameAr, setNameAr] = useState(editing?.nameAr ?? "");
   const [nameRu, setNameRu] = useState(editing?.nameRu ?? "");
+  const [nameDe, setNameDe] = useState(editing?.nameDe ?? "");
+  const [nameFr, setNameFr] = useState(editing?.nameFr ?? "");
+  const [nameEs, setNameEs] = useState(editing?.nameEs ?? "");
+  const [nameIt, setNameIt] = useState(editing?.nameIt ?? "");
+  const [namePl, setNamePl] = useState(editing?.namePl ?? "");
+  const [nameZh, setNameZh] = useState(editing?.nameZh ?? "");
   const [imageUrl, setImageUrl] = useState(editing?.imageUrl ?? "");
   const imageFieldRef = useRef<ImageFieldHandle>(null);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const input = { name, nameEn, nameAr, nameRu, imageUrl };
+      const input = { name, nameEn, nameAr, nameRu, nameDe, nameFr, nameEs, nameIt, namePl, nameZh, imageUrl };
       const res = editing
         ? await updateCategory(editing.id, input)
         : await createCategory(restaurantId, input);
@@ -105,6 +117,19 @@ export function CategoryDialog({
             <Label htmlFor="cat-ru">Name (Русский)</Label>
             <Input id="cat-ru" value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
           </div>
+          {([
+            ["de", "Deutsch", nameDe, setNameDe],
+            ["fr", "Français", nameFr, setNameFr],
+            ["es", "Español", nameEs, setNameEs],
+            ["it", "Italiano", nameIt, setNameIt],
+            ["pl", "Polski", namePl, setNamePl],
+            ["zh", "简体中文", nameZh, setNameZh],
+          ] as const).map(([code, label, value, setter]) => (
+            <div key={code} className="flex flex-col gap-2">
+              <Label htmlFor={`cat-${code}`}>Name ({label})</Label>
+              <Input id={`cat-${code}`} value={value} onChange={(e) => setter(e.target.value)} />
+            </div>
+          ))}
           <DialogFooter>
             <Button type="submit" disabled={pending || !name}>
               {pending ? t("Saving…") : t("Save")}

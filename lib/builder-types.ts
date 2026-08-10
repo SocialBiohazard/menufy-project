@@ -7,10 +7,22 @@ export interface BuilderItem {
   nameEn: string;
   nameAr: string;
   nameRu: string;
+  nameDe: string;
+  nameFr: string;
+  nameEs: string;
+  nameIt: string;
+  namePl: string;
+  nameZh: string;
   description: string;
   descriptionEn: string;
   descriptionAr: string;
   descriptionRu: string;
+  descriptionDe: string;
+  descriptionFr: string;
+  descriptionEs: string;
+  descriptionIt: string;
+  descriptionPl: string;
+  descriptionZh: string;
   price: number;
   portionGrams: number | null;
   imageUrl: string;
@@ -39,6 +51,12 @@ export interface BuilderCategory {
   nameEn: string;
   nameAr: string;
   nameRu: string;
+  nameDe: string;
+  nameFr: string;
+  nameEs: string;
+  nameIt: string;
+  namePl: string;
+  nameZh: string;
   imageUrl: string;
   items: BuilderItem[];
 }
@@ -56,10 +74,22 @@ type RawItem = {
   nameEn: string | null;
   nameAr: string | null;
   nameRu: string | null;
+  nameDe: string | null;
+  nameFr: string | null;
+  nameEs: string | null;
+  nameIt: string | null;
+  namePl: string | null;
+  nameZh: string | null;
   description: string | null;
   descriptionEn: string | null;
   descriptionAr: string | null;
   descriptionRu: string | null;
+  descriptionDe: string | null;
+  descriptionFr: string | null;
+  descriptionEs: string | null;
+  descriptionIt: string | null;
+  descriptionPl: string | null;
+  descriptionZh: string | null;
   price: number;
   portionGrams: number | null;
   imageUrl: string | null;
@@ -90,6 +120,12 @@ type RawCategory = {
   nameEn: string | null;
   nameAr: string | null;
   nameRu: string | null;
+  nameDe: string | null;
+  nameFr: string | null;
+  nameEs: string | null;
+  nameIt: string | null;
+  namePl: string | null;
+  nameZh: string | null;
   imageUrl: string | null;
   items: RawItem[];
 };
@@ -101,10 +137,22 @@ export function toBuilderItem(it: RawItem): BuilderItem {
     nameEn: it.nameEn ?? "",
     nameAr: it.nameAr ?? "",
     nameRu: it.nameRu ?? "",
+    nameDe: it.nameDe ?? "",
+    nameFr: it.nameFr ?? "",
+    nameEs: it.nameEs ?? "",
+    nameIt: it.nameIt ?? "",
+    namePl: it.namePl ?? "",
+    nameZh: it.nameZh ?? "",
     description: it.description ?? "",
     descriptionEn: it.descriptionEn ?? "",
     descriptionAr: it.descriptionAr ?? "",
     descriptionRu: it.descriptionRu ?? "",
+    descriptionDe: it.descriptionDe ?? "",
+    descriptionFr: it.descriptionFr ?? "",
+    descriptionEs: it.descriptionEs ?? "",
+    descriptionIt: it.descriptionIt ?? "",
+    descriptionPl: it.descriptionPl ?? "",
+    descriptionZh: it.descriptionZh ?? "",
     price: it.price,
     portionGrams: it.portionGrams,
     imageUrl: it.imageUrl ?? "",
@@ -135,6 +183,12 @@ export function toBuilderCategory(c: RawCategory): BuilderCategory {
     nameEn: c.nameEn ?? "",
     nameAr: c.nameAr ?? "",
     nameRu: c.nameRu ?? "",
+    nameDe: c.nameDe ?? "",
+    nameFr: c.nameFr ?? "",
+    nameEs: c.nameEs ?? "",
+    nameIt: c.nameIt ?? "",
+    namePl: c.namePl ?? "",
+    nameZh: c.nameZh ?? "",
     imageUrl: c.imageUrl ?? "",
     items: c.items.map(toBuilderItem),
   };

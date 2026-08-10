@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { slugify } from "@/lib/slug";
 import { THEMES, resolveTheme } from "@/lib/themes";
 import { updateRestaurantCore } from "@/lib/actions/restaurant";
-import type { Lang } from "@/lib/i18n";
+import { LANGS, LANGUAGE_NAMES, type Lang } from "@/lib/i18n";
 import { ImageField, type ImageFieldHandle } from "@/components/admin/ImageField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,12 +30,7 @@ import {
 } from "@/components/ui/select";
 import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
-const LANG_LABEL: Record<Lang, string> = {
-  tr: "Türkçe",
-  en: "English",
-  ar: "العربية",
-  ru: "Русский",
-};
+const LANG_LABEL = LANGUAGE_NAMES;
 
 const themeOptions = Object.entries(THEMES).map(([id, t]) => ({
   value: id,
@@ -80,6 +75,12 @@ export interface CoreFormData {
   sloganEn: string;
   sloganAr: string;
   sloganRu: string;
+  sloganDe: string;
+  sloganFr: string;
+  sloganEs: string;
+  sloganIt: string;
+  sloganPl: string;
+  sloganZh: string;
   establishedYear: number | null;
   currencyCode: string;
   phone: string;
@@ -93,6 +94,12 @@ export interface CoreFormData {
   workingHoursEn: string;
   workingHoursAr: string;
   workingHoursRu: string;
+  workingHoursDe: string;
+  workingHoursFr: string;
+  workingHoursEs: string;
+  workingHoursIt: string;
+  workingHoursPl: string;
+  workingHoursZh: string;
   timezone: string;
   weeklyHours: DayHours[];
   instagramUrl: string;
@@ -106,18 +113,42 @@ export interface CoreFormData {
   kdvNoticeEn: string;
   kdvNoticeAr: string;
   kdvNoticeRu: string;
+  kdvNoticeDe: string;
+  kdvNoticeFr: string;
+  kdvNoticeEs: string;
+  kdvNoticeIt: string;
+  kdvNoticePl: string;
+  kdvNoticeZh: string;
   allergenNotice: string;
   allergenNoticeEn: string;
   allergenNoticeAr: string;
   allergenNoticeRu: string;
+  allergenNoticeDe: string;
+  allergenNoticeFr: string;
+  allergenNoticeEs: string;
+  allergenNoticeIt: string;
+  allergenNoticePl: string;
+  allergenNoticeZh: string;
   nutritionNotice: string;
   nutritionNoticeEn: string;
   nutritionNoticeAr: string;
   nutritionNoticeRu: string;
+  nutritionNoticeDe: string;
+  nutritionNoticeFr: string;
+  nutritionNoticeEs: string;
+  nutritionNoticeIt: string;
+  nutritionNoticePl: string;
+  nutritionNoticeZh: string;
   footerDescription: string;
   footerDescriptionEn: string;
   footerDescriptionAr: string;
   footerDescriptionRu: string;
+  footerDescriptionDe: string;
+  footerDescriptionFr: string;
+  footerDescriptionEs: string;
+  footerDescriptionIt: string;
+  footerDescriptionPl: string;
+  footerDescriptionZh: string;
   footerCopyright: string;
   footerVisibility: FooterVisibility;
   lastPriceChangeAt: string;
@@ -181,6 +212,8 @@ export function CoreEditorForm({
         sloganEn: f.sloganEn,
         sloganAr: f.sloganAr,
         sloganRu: f.sloganRu,
+        sloganDe: f.sloganDe, sloganFr: f.sloganFr, sloganEs: f.sloganEs,
+        sloganIt: f.sloganIt, sloganPl: f.sloganPl, sloganZh: f.sloganZh,
         establishedYear: f.establishedYear,
         currencyCode: f.currencyCode.trim().toUpperCase(),
         phone: f.phone,
@@ -194,6 +227,8 @@ export function CoreEditorForm({
         workingHoursEn: f.workingHoursEn,
         workingHoursAr: f.workingHoursAr,
         workingHoursRu: f.workingHoursRu,
+        workingHoursDe: f.workingHoursDe, workingHoursFr: f.workingHoursFr, workingHoursEs: f.workingHoursEs,
+        workingHoursIt: f.workingHoursIt, workingHoursPl: f.workingHoursPl, workingHoursZh: f.workingHoursZh,
         timezone: f.timezone,
         weeklyHours: f.weeklyHours,
         instagramUrl: f.instagramUrl,
@@ -207,18 +242,26 @@ export function CoreEditorForm({
         kdvNoticeEn: f.kdvNoticeEn,
         kdvNoticeAr: f.kdvNoticeAr,
         kdvNoticeRu: f.kdvNoticeRu,
+        kdvNoticeDe: f.kdvNoticeDe, kdvNoticeFr: f.kdvNoticeFr, kdvNoticeEs: f.kdvNoticeEs,
+        kdvNoticeIt: f.kdvNoticeIt, kdvNoticePl: f.kdvNoticePl, kdvNoticeZh: f.kdvNoticeZh,
         allergenNotice: f.allergenNotice,
         allergenNoticeEn: f.allergenNoticeEn,
         allergenNoticeAr: f.allergenNoticeAr,
         allergenNoticeRu: f.allergenNoticeRu,
+        allergenNoticeDe: f.allergenNoticeDe, allergenNoticeFr: f.allergenNoticeFr, allergenNoticeEs: f.allergenNoticeEs,
+        allergenNoticeIt: f.allergenNoticeIt, allergenNoticePl: f.allergenNoticePl, allergenNoticeZh: f.allergenNoticeZh,
         nutritionNotice: f.nutritionNotice,
         nutritionNoticeEn: f.nutritionNoticeEn,
         nutritionNoticeAr: f.nutritionNoticeAr,
         nutritionNoticeRu: f.nutritionNoticeRu,
+        nutritionNoticeDe: f.nutritionNoticeDe, nutritionNoticeFr: f.nutritionNoticeFr, nutritionNoticeEs: f.nutritionNoticeEs,
+        nutritionNoticeIt: f.nutritionNoticeIt, nutritionNoticePl: f.nutritionNoticePl, nutritionNoticeZh: f.nutritionNoticeZh,
         footerDescription: f.footerDescription,
         footerDescriptionEn: f.footerDescriptionEn,
         footerDescriptionAr: f.footerDescriptionAr,
         footerDescriptionRu: f.footerDescriptionRu,
+        footerDescriptionDe: f.footerDescriptionDe, footerDescriptionFr: f.footerDescriptionFr, footerDescriptionEs: f.footerDescriptionEs,
+        footerDescriptionIt: f.footerDescriptionIt, footerDescriptionPl: f.footerDescriptionPl, footerDescriptionZh: f.footerDescriptionZh,
         footerCopyright: f.footerCopyright,
         footerVisibility: f.footerVisibility,
         lastPriceChangeAt: f.lastPriceChangeAt,
@@ -343,9 +386,9 @@ export function CoreEditorForm({
           </div>
           <LocalizedTextareas
             label="Slogan"
-            values={[f.slogan, f.sloganEn, f.sloganAr, f.sloganRu]}
+            values={[f.slogan, f.sloganEn, f.sloganAr, f.sloganRu, f.sloganDe, f.sloganFr, f.sloganEs, f.sloganIt, f.sloganPl, f.sloganZh]}
             onChange={(index, value) => set(([
-              "slogan", "sloganEn", "sloganAr", "sloganRu",
+              "slogan", "sloganEn", "sloganAr", "sloganRu", "sloganDe", "sloganFr", "sloganEs", "sloganIt", "sloganPl", "sloganZh",
             ] as const)[index], value)}
             rows={1}
           />
@@ -427,9 +470,9 @@ export function CoreEditorForm({
           >
             <LocalizedTextareas
               label="Footer description"
-              values={[f.footerDescription, f.footerDescriptionEn, f.footerDescriptionAr, f.footerDescriptionRu]}
+              values={[f.footerDescription, f.footerDescriptionEn, f.footerDescriptionAr, f.footerDescriptionRu, f.footerDescriptionDe, f.footerDescriptionFr, f.footerDescriptionEs, f.footerDescriptionIt, f.footerDescriptionPl, f.footerDescriptionZh]}
               onChange={(index, value) => set(([
-                "footerDescription", "footerDescriptionEn", "footerDescriptionAr", "footerDescriptionRu",
+                "footerDescription", "footerDescriptionEn", "footerDescriptionAr", "footerDescriptionRu", "footerDescriptionDe", "footerDescriptionFr", "footerDescriptionEs", "footerDescriptionIt", "footerDescriptionPl", "footerDescriptionZh",
               ] as const)[index], value)}
             />
           </FooterBlock>
@@ -500,8 +543,8 @@ export function CoreEditorForm({
         <CardContent className="flex flex-col gap-4">
           <LocalizedTextareas
             label="KDV / tax notice"
-            values={[f.kdvNotice, f.kdvNoticeEn, f.kdvNoticeAr, f.kdvNoticeRu]}
-            onChange={(index, value) => set((["kdvNotice", "kdvNoticeEn", "kdvNoticeAr", "kdvNoticeRu"] as const)[index], value)}
+            values={[f.kdvNotice, f.kdvNoticeEn, f.kdvNoticeAr, f.kdvNoticeRu, f.kdvNoticeDe, f.kdvNoticeFr, f.kdvNoticeEs, f.kdvNoticeIt, f.kdvNoticePl, f.kdvNoticeZh]}
+            onChange={(index, value) => set((["kdvNotice", "kdvNoticeEn", "kdvNoticeAr", "kdvNoticeRu", "kdvNoticeDe", "kdvNoticeFr", "kdvNoticeEs", "kdvNoticeIt", "kdvNoticePl", "kdvNoticeZh"] as const)[index], value)}
           />
           <Field
             label="Last price update"
@@ -511,13 +554,13 @@ export function CoreEditorForm({
           />
           <LocalizedTextareas
             label="Allergen notice"
-            values={[f.allergenNotice, f.allergenNoticeEn, f.allergenNoticeAr, f.allergenNoticeRu]}
-            onChange={(index, value) => set((["allergenNotice", "allergenNoticeEn", "allergenNoticeAr", "allergenNoticeRu"] as const)[index], value)}
+            values={[f.allergenNotice, f.allergenNoticeEn, f.allergenNoticeAr, f.allergenNoticeRu, f.allergenNoticeDe, f.allergenNoticeFr, f.allergenNoticeEs, f.allergenNoticeIt, f.allergenNoticePl, f.allergenNoticeZh]}
+            onChange={(index, value) => set((["allergenNotice", "allergenNoticeEn", "allergenNoticeAr", "allergenNoticeRu", "allergenNoticeDe", "allergenNoticeFr", "allergenNoticeEs", "allergenNoticeIt", "allergenNoticePl", "allergenNoticeZh"] as const)[index], value)}
           />
           <LocalizedTextareas
             label="Nutrition notice"
-            values={[f.nutritionNotice, f.nutritionNoticeEn, f.nutritionNoticeAr, f.nutritionNoticeRu]}
-            onChange={(index, value) => set((["nutritionNotice", "nutritionNoticeEn", "nutritionNoticeAr", "nutritionNoticeRu"] as const)[index], value)}
+            values={[f.nutritionNotice, f.nutritionNoticeEn, f.nutritionNoticeAr, f.nutritionNoticeRu, f.nutritionNoticeDe, f.nutritionNoticeFr, f.nutritionNoticeEs, f.nutritionNoticeIt, f.nutritionNoticePl, f.nutritionNoticeZh]}
+            onChange={(index, value) => set((["nutritionNotice", "nutritionNoticeEn", "nutritionNoticeAr", "nutritionNoticeRu", "nutritionNoticeDe", "nutritionNoticeFr", "nutritionNoticeEs", "nutritionNoticeIt", "nutritionNoticePl", "nutritionNoticeZh"] as const)[index], value)}
           />
           <p className="text-xs text-muted-foreground">
             {t("Leave notices and dates blank when the restaurant has not supplied or approved the facts.")}
@@ -534,7 +577,7 @@ export function CoreEditorForm({
           <div className="flex flex-col gap-2">
             <Label>{t("Enabled languages")}</Label>
             <div className="flex flex-wrap gap-4">
-              {(["tr", "en", "ar", "ru"] as Lang[]).map((l) => (
+              {LANGS.map((l) => (
                 <label key={l} className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={f.enabledLangs.includes(l)}
@@ -667,12 +710,12 @@ function LocalizedTextareas({
   rows = 2,
 }: {
   label: string;
-  values: [string, string, string, string];
+  values: string[];
   onChange: (index: number, value: string) => void;
   rows?: number;
 }) {
   const { t } = usePanelI18n();
-  const placeholders = ["Türkçe", "English", "العربية", "Русский"];
+  const placeholders = LANGS.map((lang) => LANGUAGE_NAMES[lang]);
   return (
     <div className="flex flex-col gap-2">
       <Label>{t(label)}</Label>

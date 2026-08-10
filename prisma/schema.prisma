@@ -65,22 +65,52 @@ model Restaurant {
   kdvNoticeEn      String?
   kdvNoticeAr      String?
   kdvNoticeRu      String?
+  kdvNoticeDe      String?
+  kdvNoticeFr      String?
+  kdvNoticeEs      String?
+  kdvNoticeIt      String?
+  kdvNoticePl      String?
+  kdvNoticeZh      String?
   allergenNotice   String?
   allergenNoticeEn String?
   allergenNoticeAr String?
   allergenNoticeRu String?
+  allergenNoticeDe String?
+  allergenNoticeFr String?
+  allergenNoticeEs String?
+  allergenNoticeIt String?
+  allergenNoticePl String?
+  allergenNoticeZh String?
   nutritionNotice   String?
   nutritionNoticeEn String?
   nutritionNoticeAr String?
   nutritionNoticeRu String?
+  nutritionNoticeDe String?
+  nutritionNoticeFr String?
+  nutritionNoticeEs String?
+  nutritionNoticeIt String?
+  nutritionNoticePl String?
+  nutritionNoticeZh String?
   slogan           String?
   sloganEn         String?
   sloganAr         String?
   sloganRu         String?
+  sloganDe         String?
+  sloganFr         String?
+  sloganEs         String?
+  sloganIt         String?
+  sloganPl         String?
+  sloganZh         String?
   footerDescription   String?
   footerDescriptionEn String?
   footerDescriptionAr String?
   footerDescriptionRu String?
+  footerDescriptionDe String?
+  footerDescriptionFr String?
+  footerDescriptionEs String?
+  footerDescriptionIt String?
+  footerDescriptionPl String?
+  footerDescriptionZh String?
   footerCopyright     String?
   footerVisibility    Json?
   establishedYear  Int?
@@ -277,6 +307,12 @@ model Category {
   nameEn String?
   nameAr String?
   nameRu String?
+  nameDe String?
+  nameFr String?
+  nameEs String?
+  nameIt String?
+  namePl String?
+  nameZh String?
 
   imageUrl  String?
   sortOrder Int     @default(0)
@@ -296,10 +332,22 @@ model Item {
   nameEn        String?
   nameAr        String?
   nameRu        String?
+  nameDe        String?
+  nameFr        String?
+  nameEs        String?
+  nameIt        String?
+  namePl        String?
+  nameZh        String?
   description   String?
   descriptionEn String?
   descriptionAr String?
   descriptionRu String?
+  descriptionDe String?
+  descriptionFr String?
+  descriptionEs String?
+  descriptionIt String?
+  descriptionPl String?
+  descriptionZh String?
 
   price       Int // whole currency units (reference stores TRY as whole lira)
   portionGrams Int?
@@ -326,6 +374,12 @@ model Allergen {
   nameEn String
   nameAr String
   nameRu String?
+  nameDe String?
+  nameFr String?
+  nameEs String?
+  nameIt String?
+  namePl String?
+  nameZh String?
   icon   String // emoji
   items  ItemAllergen[]
 }
@@ -366,6 +420,12 @@ model Variant {
   labelEn   String?
   labelAr   String?
   labelRu   String?
+  labelDe   String?
+  labelFr   String?
+  labelEs   String?
+  labelIt   String?
+  labelPl   String?
+  labelZh   String?
   price     Int
   sortOrder Int    @default(0)
 

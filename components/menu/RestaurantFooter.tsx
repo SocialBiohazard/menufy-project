@@ -81,6 +81,12 @@ const COPY = {
     allDay: "Круглосуточно",
     closedDay: "Закрыто",
   },
+  de: { contact: "Kontakt", visit: "Besuchen Sie uns", hours: "Öffnungszeiten", follow: "Folgen Sie uns", directions: "Route", reviews: "Bewertungen", open: "Jetzt geöffnet", closed: "Jetzt geschlossen", allDay: "24 Stunden geöffnet", closedDay: "Geschlossen" },
+  fr: { contact: "Contact", visit: "Nous rendre visite", hours: "Horaires d’ouverture", follow: "Suivez-nous", directions: "Itinéraire", reviews: "Avis", open: "Ouvert maintenant", closed: "Fermé maintenant", allDay: "Ouvert 24 h/24", closedDay: "Fermé" },
+  es: { contact: "Contacto", visit: "Visítanos", hours: "Horario", follow: "Síguenos", directions: "Cómo llegar", reviews: "Reseñas", open: "Abierto ahora", closed: "Cerrado ahora", allDay: "Abierto 24 horas", closedDay: "Cerrado" },
+  it: { contact: "Contatti", visit: "Vieni a trovarci", hours: "Orari di apertura", follow: "Seguici", directions: "Indicazioni", reviews: "Recensioni", open: "Aperto ora", closed: "Chiuso ora", allDay: "Aperto 24 ore", closedDay: "Chiuso" },
+  pl: { contact: "Kontakt", visit: "Odwiedź nas", hours: "Godziny otwarcia", follow: "Obserwuj nas", directions: "Dojazd", reviews: "Opinie", open: "Teraz otwarte", closed: "Teraz zamknięte", allDay: "Otwarte całą dobę", closedDay: "Zamknięte" },
+  zh: { contact: "联系方式", visit: "欢迎光临", hours: "营业时间", follow: "关注我们", directions: "导航", reviews: "评价", open: "正在营业", closed: "已打烊", allDay: "24 小时营业", closedDay: "休息" },
 } satisfies Record<Lang, Record<string, string>>;
 
 const DAY_NAMES: Record<Lang, string[]> = {
@@ -88,6 +94,12 @@ const DAY_NAMES: Record<Lang, string[]> = {
   en: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
   ar: ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"],
   ru: ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"],
+  de: ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"],
+  fr: ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"],
+  es: ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"],
+  it: ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"],
+  pl: ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"],
+  zh: ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"],
 };
 
 type FooterVariant = "default" | "inci";

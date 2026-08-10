@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { MenuData, MenuItem } from "@/lib/menu";
 import { isManagedMediaUrl } from "@/lib/media-url";
-import { formatPrice, isRtl, LANG_LABELS, pick, type Lang } from "@/lib/i18n";
+import { allergenName, formatPrice, isRtl, LANG_LABELS, pick, type Lang } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { RestaurantFooter } from "@/components/menu/RestaurantFooter";
 import { themeToCssVars, type ThemeTokens } from "@/lib/themes";
@@ -120,6 +120,12 @@ const COPY = {
     new: "Новинка",
     featured: "Рекомендуем",
   },
+  de: { enter: "Menü entdecken", menu: "Menü", categories: "Kategorien", products: "Artikel", back: "Zurück zu den Kategorien", details: "Details anzeigen", portion: "Portion", ingredients: "Zutaten", nutrition: "Nährwerte", allergens: "Allergene", estimated: "geschätzt", address: "Route", call: "Anrufen", reviews: "Bewertungen", website: "Webseite", whatsapp: "WhatsApp", priceUpdated: "Preisaktualisierung", since: "Seit", empty: "Diese Kategorie wird bald aktualisiert.", emptyMenu: "Unser Menü wird vorbereitet.", unavailable: "Derzeit nicht verfügbar", new: "Neu", featured: "Empfohlen" },
+  fr: { enter: "Découvrir le menu", menu: "Menu", categories: "Catégories", products: "articles", back: "Retour aux catégories", details: "Voir les détails", portion: "Portion", ingredients: "Ingrédients", nutrition: "Valeurs nutritionnelles", allergens: "Allergènes", estimated: "estimé", address: "Itinéraire", call: "Appeler", reviews: "Avis", website: "Site web", whatsapp: "WhatsApp", priceUpdated: "Mise à jour des prix", since: "Depuis", empty: "Cette catégorie sera bientôt mise à jour.", emptyMenu: "Notre menu est en préparation.", unavailable: "Indisponible actuellement", new: "Nouveau", featured: "Recommandé" },
+  es: { enter: "Explorar el menú", menu: "Menú", categories: "Categorías", products: "productos", back: "Volver a las categorías", details: "Ver detalles", portion: "Porción", ingredients: "Ingredientes", nutrition: "Información nutricional", allergens: "Alérgenos", estimated: "estimado", address: "Cómo llegar", call: "Llamar", reviews: "Reseñas", website: "Sitio web", whatsapp: "WhatsApp", priceUpdated: "Actualización de precios", since: "Desde", empty: "Esta categoría se actualizará pronto.", emptyMenu: "Nuestro menú se está preparando.", unavailable: "No disponible actualmente", new: "Nuevo", featured: "Destacado" },
+  it: { enter: "Scopri il menù", menu: "Menù", categories: "Categorie", products: "prodotti", back: "Torna alle categorie", details: "Vedi dettagli", portion: "Porzione", ingredients: "Ingredienti", nutrition: "Valori nutrizionali", allergens: "Allergeni", estimated: "stimato", address: "Indicazioni", call: "Chiama", reviews: "Recensioni", website: "Sito web", whatsapp: "WhatsApp", priceUpdated: "Aggiornamento prezzi", since: "Dal", empty: "Questa categoria sarà aggiornata presto.", emptyMenu: "Il nostro menù è in preparazione.", unavailable: "Non disponibile", new: "Nuovo", featured: "In evidenza" },
+  pl: { enter: "Odkryj menu", menu: "Menu", categories: "Kategorie", products: "pozycji", back: "Wróć do kategorii", details: "Zobacz szczegóły", portion: "Porcja", ingredients: "Składniki", nutrition: "Wartości odżywcze", allergens: "Alergeny", estimated: "szacunkowo", address: "Dojazd", call: "Zadzwoń", reviews: "Opinie", website: "Strona internetowa", whatsapp: "WhatsApp", priceUpdated: "Aktualizacja cen", since: "Od", empty: "Ta kategoria zostanie wkrótce zaktualizowana.", emptyMenu: "Nasze menu jest przygotowywane.", unavailable: "Obecnie niedostępne", new: "Nowość", featured: "Polecane" },
+  zh: { enter: "查看菜单", menu: "菜单", categories: "分类", products: "项", back: "返回分类", details: "查看详情", portion: "份量", ingredients: "食材", nutrition: "营养信息", allergens: "过敏原", estimated: "估算", address: "导航", call: "拨打电话", reviews: "评价", website: "网站", whatsapp: "WhatsApp", priceUpdated: "价格更新", since: "始于", empty: "此分类即将更新。", emptyMenu: "菜单正在准备中。", unavailable: "暂时无法提供", new: "新品", featured: "推荐" },
 } satisfies Record<Lang, Record<string, string>>;
 
 const FALLBACK_BACKGROUND = "/templates/inci-heritage/background.webp";
@@ -137,6 +143,12 @@ const NUTRITION_LABELS: Record<Lang, Record<string, string>> = {
   en: { protein: "Protein", fat: "Fat", saturated: "Saturated fat", carbs: "Carbohydrate", sugar: "Sugar", fiber: "Fiber", salt: "Salt" },
   ar: { protein: "البروتين", fat: "الدهون", saturated: "دهون مشبعة", carbs: "الكربوهيدرات", sugar: "السكر", fiber: "الألياف", salt: "الملح" },
   ru: { protein: "Белки", fat: "Жиры", saturated: "Насыщенные жиры", carbs: "Углеводы", sugar: "Сахар", fiber: "Клетчатка", salt: "Соль" },
+  de: { protein: "Eiweiß", fat: "Fett", saturated: "Gesättigte Fettsäuren", carbs: "Kohlenhydrate", sugar: "Zucker", fiber: "Ballaststoffe", salt: "Salz" },
+  fr: { protein: "Protéines", fat: "Lipides", saturated: "Graisses saturées", carbs: "Glucides", sugar: "Sucres", fiber: "Fibres", salt: "Sel" },
+  es: { protein: "Proteínas", fat: "Grasas", saturated: "Grasas saturadas", carbs: "Carbohidratos", sugar: "Azúcares", fiber: "Fibra", salt: "Sal" },
+  it: { protein: "Proteine", fat: "Grassi", saturated: "Grassi saturi", carbs: "Carboidrati", sugar: "Zuccheri", fiber: "Fibre", salt: "Sale" },
+  pl: { protein: "Białko", fat: "Tłuszcz", saturated: "Tłuszcze nasycone", carbs: "Węglowodany", sugar: "Cukry", fiber: "Błonnik", salt: "Sól" },
+  zh: { protein: "蛋白质", fat: "脂肪", saturated: "饱和脂肪", carbs: "碳水化合物", sugar: "糖", fiber: "膳食纤维", salt: "盐" },
 };
 
 const NUTRITION_BASIS: Record<Lang, Record<string, string>> = {
@@ -144,6 +156,12 @@ const NUTRITION_BASIS: Record<Lang, Record<string, string>> = {
   en: { "100g": "per 100 g", "100ml": "per 100 ml", "per portion": "per portion" },
   ar: { "100g": "لكل 100 غ", "100ml": "لكل 100 مل", "per portion": "لكل حصة" },
   ru: { "100g": "на 100 г", "100ml": "на 100 мл", "per portion": "на порцию" },
+  de: { "100g": "pro 100 g", "100ml": "pro 100 ml", "per portion": "pro Portion" },
+  fr: { "100g": "pour 100 g", "100ml": "pour 100 ml", "per portion": "par portion" },
+  es: { "100g": "por 100 g", "100ml": "por 100 ml", "per portion": "por porción" },
+  it: { "100g": "per 100 g", "100ml": "per 100 ml", "per portion": "per porzione" },
+  pl: { "100g": "na 100 g", "100ml": "na 100 ml", "per portion": "na porcję" },
+  zh: { "100g": "每 100 克", "100ml": "每 100 毫升", "per portion": "每份" },
 };
 
 export function InciHeritageMenu({
@@ -647,7 +665,7 @@ function ItemDetails({
                   <div className="mt-3 flex flex-wrap gap-2">
                     {item.allergens.map(({ allergen }) => (
                       <span key={allergen.id} className="rounded-full bg-[#882634]/8 px-3 py-1.5 text-xs text-[#5d2930]">
-                        {allergen.icon} {lang === "tr" ? allergen.nameTr : lang === "en" ? allergen.nameEn : lang === "ar" ? allergen.nameAr : allergen.nameRu || allergen.nameTr}
+                        {allergen.icon} {allergenName(allergen, lang)}
                       </span>
                     ))}
                   </div>

@@ -2,7 +2,7 @@ import Image from "next/image";
 import type { CSSProperties } from "react";
 import type { MenuItem } from "@/lib/menu";
 import { isManagedMediaUrl } from "@/lib/media-url";
-import { type Lang, UI, pick, formatPrice } from "@/lib/i18n";
+import { allergenName, type Lang, UI, pick, formatPrice } from "@/lib/i18n";
 
 const softAccent = "color-mix(in oklab, var(--menu-accent) 14%, transparent)";
 
@@ -98,7 +98,7 @@ export function ItemCard({
                   border: "1px solid var(--menu-border)",
                 }}
                 title={
-                  lang === "en" ? a.allergen.nameEn : lang === "ar" ? a.allergen.nameAr : lang === "ru" ? a.allergen.nameRu || a.allergen.nameTr : a.allergen.nameTr
+                  allergenName(a.allergen, lang)
                 }
               >
                 <span aria-hidden>{a.allergen.icon}</span>
