@@ -4,21 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
-  Camera,
   ChevronRight,
   Clock3,
-  Globe2,
-  Mail,
-  MapPin,
-  MessageCircle,
-  Music2,
-  Phone,
-  Star,
 } from "lucide-react";
 import type { MenuData, MenuItem } from "@/lib/menu";
 import { isManagedMediaUrl } from "@/lib/media-url";
 import { formatPrice, isRtl, LANG_LABELS, pick, type Lang } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { RestaurantFooter } from "@/components/menu/RestaurantFooter";
 import { themeToCssVars, type ThemeTokens } from "@/lib/themes";
 import {
   readInciNavigation,
@@ -102,6 +95,31 @@ const COPY = {
     new: "جديد",
     featured: "مميز",
   },
+  ru: {
+    enter: "Открыть меню",
+    menu: "Меню",
+    categories: "Категории",
+    products: "позиций",
+    back: "Назад к категориям",
+    details: "Подробнее",
+    portion: "Порция",
+    ingredients: "Состав",
+    nutrition: "Пищевая ценность",
+    allergens: "Аллергены",
+    estimated: "примерно",
+    address: "Маршрут",
+    call: "Позвонить",
+    reviews: "Отзывы",
+    website: "Веб-сайт",
+    whatsapp: "WhatsApp",
+    priceUpdated: "Цены обновлены",
+    since: "С",
+    empty: "Эта категория скоро будет обновлена.",
+    emptyMenu: "Наше меню готовится и скоро появится здесь.",
+    unavailable: "Сейчас недоступно",
+    new: "Новинка",
+    featured: "Рекомендуем",
+  },
 } satisfies Record<Lang, Record<string, string>>;
 
 const FALLBACK_BACKGROUND = "/templates/inci-heritage/background.webp";
@@ -118,12 +136,14 @@ const NUTRITION_LABELS: Record<Lang, Record<string, string>> = {
   tr: { protein: "Protein", fat: "Yağ", saturated: "Doymuş yağ", carbs: "Karbonhidrat", sugar: "Şeker", fiber: "Lif", salt: "Tuz" },
   en: { protein: "Protein", fat: "Fat", saturated: "Saturated fat", carbs: "Carbohydrate", sugar: "Sugar", fiber: "Fiber", salt: "Salt" },
   ar: { protein: "البروتين", fat: "الدهون", saturated: "دهون مشبعة", carbs: "الكربوهيدرات", sugar: "السكر", fiber: "الألياف", salt: "الملح" },
+  ru: { protein: "Белки", fat: "Жиры", saturated: "Насыщенные жиры", carbs: "Углеводы", sugar: "Сахар", fiber: "Клетчатка", salt: "Соль" },
 };
 
 const NUTRITION_BASIS: Record<Lang, Record<string, string>> = {
   tr: { "100g": "100 g için", "100ml": "100 ml için", "per portion": "porsiyon başına" },
   en: { "100g": "per 100 g", "100ml": "per 100 ml", "per portion": "per portion" },
   ar: { "100g": "لكل 100 غ", "100ml": "لكل 100 مل", "per portion": "لكل حصة" },
+  ru: { "100g": "на 100 г", "100ml": "на 100 мл", "per portion": "на порцию" },
 };
 
 export function InciHeritageMenu({
@@ -372,7 +392,7 @@ export function InciHeritageMenu({
         )}
       </main>
 
-      <RestaurantFooter menu={menu} lang={lang} />
+      <RestaurantFooter menu={menu} lang={lang} variant="inci" />
       <ItemDetails
         item={selectedItem}
         lang={lang}
@@ -627,7 +647,7 @@ function ItemDetails({
                   <div className="mt-3 flex flex-wrap gap-2">
                     {item.allergens.map(({ allergen }) => (
                       <span key={allergen.id} className="rounded-full bg-[#882634]/8 px-3 py-1.5 text-xs text-[#5d2930]">
-                        {allergen.icon} {lang === "tr" ? allergen.nameTr : lang === "en" ? allergen.nameEn : allergen.nameAr}
+                        {allergen.icon} {lang === "tr" ? allergen.nameTr : lang === "en" ? allergen.nameEn : lang === "ar" ? allergen.nameAr : allergen.nameRu || allergen.nameTr}
                       </span>
                     ))}
                   </div>
@@ -673,97 +693,12 @@ function DetailLine({ label, value }: { label: string; value: string }) {
   );
 }
 
-function RestaurantFooter({ menu, lang }: { menu: MenuData; lang: Lang }) {
-  const t = COPY[lang];
-  const hours = workingHoursText(menu.workingHours, lang);
-  const taxNotice = pick(menu, "kdvNotice", lang);
-  const whatsappDigits = menu.whatsappNumber?.replace(/\D/g, "");
-  const links = [
-    menu.phone && { href: `tel:${menu.phone.replace(/[^+\d]/g, "")}`, label: t.call, icon: Phone },
-    menu.email && { href: `mailto:${menu.email}`, label: menu.email, icon: Mail },
-    whatsappDigits && { href: `https://wa.me/${whatsappDigits}`, label: t.whatsapp, icon: MessageCircle },
-    menu.websiteUrl && { href: menu.websiteUrl, label: t.website, icon: Globe2 },
-    menu.googleMapsUrl && { href: menu.googleMapsUrl, label: t.address, icon: MapPin },
-    menu.googleReviewsUrl && { href: menu.googleReviewsUrl, label: t.reviews, icon: Star },
-    menu.instagramUrl && { href: menu.instagramUrl, label: "Instagram", icon: Camera },
-    menu.tiktokUrl && { href: menu.tiktokUrl, label: "TikTok", icon: Music2 },
-  ].filter(Boolean) as { href: string; label: string; icon: typeof Phone }[];
-  const hasAddress = Boolean(menu.address || menu.district || menu.city);
-  const hasFooterDetails = hasAddress || hours || links.length > 0 || taxNotice ||
-    menu.lastPriceChangeAt || menu.establishedYear || menu.attributionText;
-
-  if (!hasFooterDetails) return null;
-
-  return (
-    <footer className="bg-[#55131e] px-4 py-10 text-[#fff8ea]">
-      <div className="mx-auto max-w-5xl">
-        <div className="flex flex-col justify-between gap-8 sm:flex-row">
-          <div>
-            <p className="font-display text-2xl font-semibold">{menu.businessName}</p>
-            {menu.establishedYear && (
-              <p className="mt-1 text-xs uppercase tracking-[.18em] text-[#e7c784]">
-                {t.since} {menu.establishedYear}
-              </p>
-            )}
-            {hasAddress && (
-              <p className="mt-2 max-w-md text-sm leading-6 text-[#fff8ea]/65">{[menu.address, menu.district, menu.city].filter(Boolean).join(", ")}</p>
-            )}
-            {hours && <p className="mt-2 flex items-center gap-2 text-sm text-[#e7c784]"><Clock3 className="size-4" />{hours}</p>}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {links.map(({ href, label, icon: Icon }) => (
-              <a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold transition hover:border-[#d5a95d] hover:text-[#e7c784]">
-                <Icon className="size-4" />{label}
-              </a>
-            ))}
-          </div>
-        </div>
-        {(taxNotice || menu.lastPriceChangeAt || menu.attributionText) && (
-          <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-xs text-white/45 sm:flex-row sm:flex-wrap sm:justify-between">
-            <div className="flex flex-col gap-1">
-              {taxNotice && <p>{taxNotice}</p>}
-              {menu.lastPriceChangeAt && (
-                <p>{t.priceUpdated}: {formatDisplayDate(menu.lastPriceChangeAt, lang)}</p>
-              )}
-            </div>
-            {menu.attributionText && (
-              menu.attributionUrl ? (
-                <a href={menu.attributionUrl} target="_blank" rel="noreferrer" className="transition hover:text-[#e7c784]">
-                  {menu.attributionText}
-                </a>
-              ) : (
-                <p>{menu.attributionText}</p>
-              )
-            )}
-          </div>
-        )}
-      </div>
-    </footer>
-  );
-}
-
 function StatusBadge({ children }: { children: React.ReactNode }) {
   return (
     <span className="rounded-full bg-[#882634]/8 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-[#882634]">
       {children}
     </span>
   );
-}
-
-function workingHoursText(value: unknown, lang: Lang): string {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
-  const record = value as Record<string, unknown>;
-  const localized = lang === "en" ? record.displayEn : lang === "ar" ? record.displayAr : record.display;
-  const display = localized || record.display;
-  return typeof display === "string" ? display : "";
-}
-
-function formatDisplayDate(value: Date, lang: Lang): string {
-  const locale = lang === "ar" ? "ar" : lang === "en" ? "en-GB" : "tr-TR";
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "medium",
-    timeZone: "UTC",
-  }).format(new Date(value));
 }
 
 function businessInitials(value: string): string {

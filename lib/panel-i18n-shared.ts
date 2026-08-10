@@ -1,4 +1,6 @@
-export const PANEL_LOCALES = ["en", "tr", "ar"] as const;
+import { RU_PANEL } from "@/lib/panel-i18n-ru";
+
+export const PANEL_LOCALES = ["en", "tr", "ar", "ru"] as const;
 
 export type PanelLocale = (typeof PANEL_LOCALES)[number];
 
@@ -6,6 +8,7 @@ export const PANEL_LOCALE_LABELS: Record<PanelLocale, string> = {
   en: "English",
   tr: "Türkçe",
   ar: "العربية",
+  ru: "Русский",
 };
 
 export function isPanelLocale(value: unknown): value is PanelLocale {
@@ -14,6 +17,10 @@ export function isPanelLocale(value: unknown): value is PanelLocale {
 
 export function panelDirection(locale: PanelLocale) {
   return locale === "ar" ? "rtl" : "ltr";
+}
+
+export function panelIntlLocale(locale: PanelLocale) {
+  return locale === "ar" ? "ar" : locale === "tr" ? "tr-TR" : locale === "ru" ? "ru-RU" : "en";
 }
 
 const tr = {
@@ -610,6 +617,7 @@ type TranslationKey = keyof typeof tr;
 
 export function translatePanel(locale: PanelLocale, key: TranslationKey | string): string {
   if (locale === "en") return key;
+  if (locale === "ru") return RU_PANEL[key] ?? key;
   const dictionary = locale === "tr" ? tr : ar;
   return dictionary[key as TranslationKey] ?? key;
 }

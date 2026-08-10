@@ -98,7 +98,7 @@ export function ItemCard({
                   border: "1px solid var(--menu-border)",
                 }}
                 title={
-                  lang === "en" ? a.allergen.nameEn : lang === "ar" ? a.allergen.nameAr : a.allergen.nameTr
+                  lang === "en" ? a.allergen.nameEn : lang === "ar" ? a.allergen.nameAr : lang === "ru" ? a.allergen.nameRu || a.allergen.nameTr : a.allergen.nameTr
                 }
               >
                 <span aria-hidden>{a.allergen.icon}</span>

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOperator } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getPanelI18n } from "@/lib/panel-i18n";
+import { panelIntlLocale } from "@/lib/panel-i18n-shared";
 
 export default async function CustomerManagementPage() {
   const operator = await requireOperator();
@@ -128,7 +129,7 @@ export default async function CustomerManagementPage() {
       {notifications.length > 0 && (
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Bell className="size-4" /> {t("Operator notifications")}</CardTitle></CardHeader>
-          <CardContent className="space-y-2 text-sm">{notifications.map((notice) => <div key={notice.id}><span className="font-medium">{notice.title}</span><span className="ml-2 text-xs text-muted-foreground">{notice.createdAt.toLocaleString(locale === "ar" ? "ar" : locale === "tr" ? "tr-TR" : "en")}</span></div>)}</CardContent>
+          <CardContent className="space-y-2 text-sm">{notifications.map((notice) => <div key={notice.id}><span className="font-medium">{notice.title}</span><span className="ml-2 text-xs text-muted-foreground">{notice.createdAt.toLocaleString(panelIntlLocale(locale))}</span></div>)}</CardContent>
         </Card>
       )}
     </div>

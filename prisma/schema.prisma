@@ -53,22 +53,36 @@ model Restaurant {
   city             String?
   district         String?
   workingHours     Json?
+  timezone         String  @default("Europe/Istanbul")
   instagramUrl     String?
+  facebookUrl      String?
   tiktokUrl        String?
+  xUrl             String?
+  youtubeUrl       String?
   googleMapsUrl    String?
   googleReviewsUrl String?
   kdvNotice        String?
   kdvNoticeEn      String?
   kdvNoticeAr      String?
+  kdvNoticeRu      String?
   allergenNotice   String?
   allergenNoticeEn String?
   allergenNoticeAr String?
+  allergenNoticeRu String?
   nutritionNotice   String?
   nutritionNoticeEn String?
   nutritionNoticeAr String?
+  nutritionNoticeRu String?
   slogan           String?
   sloganEn         String?
   sloganAr         String?
+  sloganRu         String?
+  footerDescription   String?
+  footerDescriptionEn String?
+  footerDescriptionAr String?
+  footerDescriptionRu String?
+  footerCopyright     String?
+  footerVisibility    Json?
   establishedYear  Int?
   currencyCode     String @default("TRY")
   attributionText  String?
@@ -262,6 +276,7 @@ model Category {
   name   String
   nameEn String?
   nameAr String?
+  nameRu String?
 
   imageUrl  String?
   sortOrder Int     @default(0)
@@ -280,9 +295,11 @@ model Item {
   name          String
   nameEn        String?
   nameAr        String?
+  nameRu        String?
   description   String?
   descriptionEn String?
   descriptionAr String?
+  descriptionRu String?
 
   price       Int // whole currency units (reference stores TRY as whole lira)
   portionGrams Int?
@@ -308,6 +325,7 @@ model Allergen {
   nameTr String
   nameEn String
   nameAr String
+  nameRu String?
   icon   String // emoji
   items  ItemAllergen[]
 }
@@ -347,6 +365,7 @@ model Variant {
   label     String
   labelEn   String?
   labelAr   String?
+  labelRu   String?
   price     Int
   sortOrder Int    @default(0)
 

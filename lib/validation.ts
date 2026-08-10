@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { isValidTimezone } from "@/lib/restaurant-footer";
 
-export const LANGS = ["tr", "en", "ar"] as const;
+export const LANGS = ["tr", "en", "ar", "ru"] as const;
 
 const slugField = z
   .string()
@@ -60,6 +61,36 @@ const hostnameField = z
     "Use a hostname only, for example menu.example.com",
   );
 
+const hoursPeriodSchema = z.object({
+  start: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM time"),
+  end: z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM time"),
+});
+
+const dayHoursSchema = z.object({
+  day: z.number().int().min(0).max(6),
+  closed: z.boolean(),
+  allDay: z.boolean(),
+  periods: z.array(hoursPeriodSchema).min(1).max(4),
+});
+
+const footerVisibilitySchema = z.object({
+  description: z.boolean(),
+  phone: z.boolean(),
+  whatsapp: z.boolean(),
+  email: z.boolean(),
+  website: z.boolean(),
+  address: z.boolean(),
+  maps: z.boolean(),
+  hours: z.boolean(),
+  reviews: z.boolean(),
+  instagram: z.boolean(),
+  facebook: z.boolean(),
+  tiktok: z.boolean(),
+  x: z.boolean(),
+  youtube: z.boolean(),
+  copyright: z.boolean(),
+});
+
 export const restaurantCreateSchema = z.object({
   businessName: z.string().trim().min(1, "Business name is required").max(120),
   slug: slugField,
@@ -84,6 +115,7 @@ export const restaurantCoreSchema = z.object({
   slogan: optionalText(240, "Slogan is too long"),
   sloganEn: optionalText(240, "English slogan is too long"),
   sloganAr: optionalText(240, "Arabic slogan is too long"),
+  sloganRu: optionalText(240, "Russian slogan is too long"),
   establishedYear: z.coerce
     .number()
     .int()
@@ -102,19 +134,37 @@ export const restaurantCoreSchema = z.object({
   workingHours: optionalText(500, "Working hours are too long"),
   workingHoursEn: optionalText(500, "English working hours are too long"),
   workingHoursAr: optionalText(500, "Arabic working hours are too long"),
+  workingHoursRu: optionalText(500, "Russian working hours are too long"),
+  timezone: z.string().trim().min(1).max(100).refine(isValidTimezone, "Use a valid IANA timezone"),
+  weeklyHours: z.array(dayHoursSchema).length(7).refine(
+    (days) => new Set(days.map((day) => day.day)).size === 7,
+    "Provide each weekday exactly once",
+  ),
   instagramUrl: optionalUrl,
+  facebookUrl: optionalUrl,
   tiktokUrl: optionalUrl,
+  xUrl: optionalUrl,
+  youtubeUrl: optionalUrl,
   googleMapsUrl: optionalUrl,
   googleReviewsUrl: optionalUrl,
   kdvNotice: optionalText(500, "Tax notice is too long"),
   kdvNoticeEn: optionalText(500, "English tax notice is too long"),
   kdvNoticeAr: optionalText(500, "Arabic tax notice is too long"),
+  kdvNoticeRu: optionalText(500, "Russian tax notice is too long"),
   allergenNotice: optionalText(1000, "Allergen notice is too long"),
   allergenNoticeEn: optionalText(1000, "English allergen notice is too long"),
   allergenNoticeAr: optionalText(1000, "Arabic allergen notice is too long"),
+  allergenNoticeRu: optionalText(1000, "Russian allergen notice is too long"),
   nutritionNotice: optionalText(1000, "Nutrition notice is too long"),
   nutritionNoticeEn: optionalText(1000, "English nutrition notice is too long"),
   nutritionNoticeAr: optionalText(1000, "Arabic nutrition notice is too long"),
+  nutritionNoticeRu: optionalText(1000, "Russian nutrition notice is too long"),
+  footerDescription: optionalText(500, "Footer description is too long"),
+  footerDescriptionEn: optionalText(500, "English footer description is too long"),
+  footerDescriptionAr: optionalText(500, "Arabic footer description is too long"),
+  footerDescriptionRu: optionalText(500, "Russian footer description is too long"),
+  footerCopyright: optionalText(240, "Copyright line is too long"),
+  footerVisibility: footerVisibilitySchema,
   lastPriceChangeAt: optionalDate,
   attributionText: optionalText(120, "Attribution text is too long"),
   attributionUrl: optionalUrl,
@@ -131,6 +181,7 @@ export const categorySchema = z.object({
   name: z.string().min(1, "Name is required"),
   nameEn: z.string().optional(),
   nameAr: z.string().optional(),
+  nameRu: z.string().optional(),
   imageUrl: optionalImage,
 });
 export type CategoryInput = z.infer<typeof categorySchema>;
@@ -139,9 +190,11 @@ export const itemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   nameEn: z.string().optional(),
   nameAr: z.string().optional(),
+  nameRu: z.string().optional(),
   description: z.string().optional(),
   descriptionEn: z.string().optional(),
   descriptionAr: z.string().optional(),
+  descriptionRu: z.string().optional(),
   price: z.coerce.number().int().min(0, "Price must be 0 or more"),
   imageUrl: optionalImage,
   ingredients: z.string().optional(),

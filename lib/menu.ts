@@ -22,6 +22,35 @@ export type MenuData = Prisma.RestaurantGetPayload<{ include: typeof menuInclude
 export type MenuCategory = MenuData["categories"][number];
 export type MenuItem = MenuCategory["items"][number];
 
+const liveFooterSelect = {
+  businessName: true,
+  logo: true,
+  phone: true,
+  email: true,
+  whatsappNumber: true,
+  websiteUrl: true,
+  address: true,
+  city: true,
+  district: true,
+  workingHours: true,
+  timezone: true,
+  instagramUrl: true,
+  facebookUrl: true,
+  tiktokUrl: true,
+  xUrl: true,
+  youtubeUrl: true,
+  googleMapsUrl: true,
+  googleReviewsUrl: true,
+  footerDescription: true,
+  footerDescriptionEn: true,
+  footerDescriptionAr: true,
+  footerDescriptionRu: true,
+  footerCopyright: true,
+  footerVisibility: true,
+} satisfies Prisma.RestaurantSelect;
+
+type LiveFooterSettings = Prisma.RestaurantGetPayload<{ select: typeof liveFooterSelect }>;
+
 function hydrateSnapshot(value: unknown): MenuData | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const menu = structuredClone(value) as MenuData & {
@@ -46,6 +75,10 @@ export function dinerMenu(menu: MenuData | null): MenuData | null {
   return { ...menu, categories };
 }
 
+function withLiveFooter(menu: MenuData | null, settings: LiveFooterSettings): MenuData | null {
+  return menu ? { ...menu, ...settings } : null;
+}
+
 export async function currentMenuData(id: string): Promise<MenuData | null> {
   return prisma.restaurant.findUnique({ where: { id }, include: menuInclude });
 }
@@ -65,10 +98,10 @@ export async function publishedSnapshotFor(
 export async function getPublishedRestaurant(slug: string): Promise<MenuData | null> {
   const restaurant = await prisma.restaurant.findFirst({
     where: { slug, isPublished: true },
-    select: { id: true, publishedSnapshot: true },
+    select: { id: true, publishedSnapshot: true, ...liveFooterSelect },
   });
   if (!restaurant) return null;
-  return dinerMenu(hydrateSnapshot(restaurant.publishedSnapshot));
+  return dinerMenu(withLiveFooter(hydrateSnapshot(restaurant.publishedSnapshot), restaurant));
 }
 
 /** Development-only visual fixture lookup. Callers must enforce the env guard. */
@@ -83,10 +116,10 @@ export async function getRestaurantForVisualPreview(slug: string): Promise<MenuD
 export async function getPublishedRestaurantByHostname(hostname: string): Promise<MenuData | null> {
   const restaurant = await prisma.restaurant.findFirst({
     where: { publicHostname: hostname.toLowerCase(), isPublished: true },
-    select: { id: true, publishedSnapshot: true },
+    select: { id: true, publishedSnapshot: true, ...liveFooterSelect },
   });
   if (!restaurant) return null;
-  return dinerMenu(hydrateSnapshot(restaurant.publishedSnapshot));
+  return dinerMenu(withLiveFooter(hydrateSnapshot(restaurant.publishedSnapshot), restaurant));
 }
 
 /** Development-only hostname fixture lookup. */

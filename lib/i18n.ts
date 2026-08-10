@@ -1,9 +1,10 @@
-export type Lang = "tr" | "en" | "ar";
+export type Lang = "tr" | "en" | "ar" | "ru";
 
 export const LANG_LABELS: Record<Lang, string> = {
   tr: "TR",
   en: "EN",
   ar: "AR",
+  ru: "RU",
 };
 
 export const RTL_LANGS: Lang[] = ["ar"];
@@ -20,14 +21,14 @@ export function pick<T extends Record<string, unknown>>(
 ): string {
   const tr = (obj[base] as string | null | undefined) ?? "";
   if (lang === "tr") return tr;
-  const suffix = lang === "en" ? "En" : "Ar";
+  const suffix = lang === "en" ? "En" : lang === "ar" ? "Ar" : "Ru";
   const translated = obj[`${base}${suffix}`] as string | null | undefined;
   return translated && translated.length > 0 ? translated : tr;
 }
 
 /** Prices are stored in whole currency units. */
 export function formatPrice(price: number, currencyCode = "TRY", lang: Lang = "tr"): string {
-  const locale = lang === "ar" ? "ar" : lang === "en" ? "en" : "tr-TR";
+  const locale = lang === "ar" ? "ar" : lang === "en" ? "en" : lang === "ru" ? "ru-RU" : "tr-TR";
   try {
     return new Intl.NumberFormat(locale, {
       style: "currency",
@@ -68,5 +69,14 @@ export const UI: Record<Lang, Record<UiKey, string>> = {
     menu: "القائمة",
     emptyMenu: "ستُضاف القائمة قريبًا.",
     contains: "يحتوي على",
+  },
+  ru: {
+    allergens: "Аллергены",
+    unavailable: "Нет в наличии",
+    new: "Новинка",
+    featured: "Рекомендуем",
+    menu: "Меню",
+    emptyMenu: "Меню скоро появится.",
+    contains: "Содержит",
   },
 };

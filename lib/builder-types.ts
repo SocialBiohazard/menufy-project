@@ -6,9 +6,11 @@ export interface BuilderItem {
   name: string;
   nameEn: string;
   nameAr: string;
+  nameRu: string;
   description: string;
   descriptionEn: string;
   descriptionAr: string;
+  descriptionRu: string;
   price: number;
   portionGrams: number | null;
   imageUrl: string;
@@ -36,6 +38,7 @@ export interface BuilderCategory {
   name: string;
   nameEn: string;
   nameAr: string;
+  nameRu: string;
   imageUrl: string;
   items: BuilderItem[];
 }
@@ -52,9 +55,11 @@ type RawItem = {
   name: string;
   nameEn: string | null;
   nameAr: string | null;
+  nameRu: string | null;
   description: string | null;
   descriptionEn: string | null;
   descriptionAr: string | null;
+  descriptionRu: string | null;
   price: number;
   portionGrams: number | null;
   imageUrl: string | null;
@@ -84,6 +89,7 @@ type RawCategory = {
   name: string;
   nameEn: string | null;
   nameAr: string | null;
+  nameRu: string | null;
   imageUrl: string | null;
   items: RawItem[];
 };
@@ -94,9 +100,11 @@ export function toBuilderItem(it: RawItem): BuilderItem {
     name: it.name,
     nameEn: it.nameEn ?? "",
     nameAr: it.nameAr ?? "",
+    nameRu: it.nameRu ?? "",
     description: it.description ?? "",
     descriptionEn: it.descriptionEn ?? "",
     descriptionAr: it.descriptionAr ?? "",
+    descriptionRu: it.descriptionRu ?? "",
     price: it.price,
     portionGrams: it.portionGrams,
     imageUrl: it.imageUrl ?? "",
@@ -126,6 +134,7 @@ export function toBuilderCategory(c: RawCategory): BuilderCategory {
     name: c.name,
     nameEn: c.nameEn ?? "",
     nameAr: c.nameAr ?? "",
+    nameRu: c.nameRu ?? "",
     imageUrl: c.imageUrl ?? "",
     items: c.items.map(toBuilderItem),
   };

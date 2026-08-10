@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import type { DayHours, FooterFieldKey, FooterVisibility } from "@/lib/restaurant-footer";
 import {
   Card,
   CardContent,
@@ -32,6 +34,7 @@ const LANG_LABEL: Record<Lang, string> = {
   tr: "Türkçe",
   en: "English",
   ar: "العربية",
+  ru: "Русский",
 };
 
 const themeOptions = Object.entries(THEMES).map(([id, t]) => ({
@@ -53,10 +56,10 @@ const SETTINGS_SECTIONS = [
   { id: "branding", label: "Branding" },
   { id: "public-address", label: "Public address" },
   { id: "restaurant-details", label: "Details" },
+  { id: "footer", label: "Footer" },
   { id: "menu-notices", label: "Notices" },
   { id: "languages", label: "Languages" },
   { id: "appearance", label: "Appearance" },
-  { id: "footer-attribution", label: "Footer attribution" },
 ] as const;
 
 export interface CoreFormData {
@@ -76,6 +79,7 @@ export interface CoreFormData {
   slogan: string;
   sloganEn: string;
   sloganAr: string;
+  sloganRu: string;
   establishedYear: number | null;
   currencyCode: string;
   phone: string;
@@ -88,19 +92,34 @@ export interface CoreFormData {
   workingHours: string;
   workingHoursEn: string;
   workingHoursAr: string;
+  workingHoursRu: string;
+  timezone: string;
+  weeklyHours: DayHours[];
   instagramUrl: string;
+  facebookUrl: string;
   tiktokUrl: string;
+  xUrl: string;
+  youtubeUrl: string;
   googleMapsUrl: string;
   googleReviewsUrl: string;
   kdvNotice: string;
   kdvNoticeEn: string;
   kdvNoticeAr: string;
+  kdvNoticeRu: string;
   allergenNotice: string;
   allergenNoticeEn: string;
   allergenNoticeAr: string;
+  allergenNoticeRu: string;
   nutritionNotice: string;
   nutritionNoticeEn: string;
   nutritionNoticeAr: string;
+  nutritionNoticeRu: string;
+  footerDescription: string;
+  footerDescriptionEn: string;
+  footerDescriptionAr: string;
+  footerDescriptionRu: string;
+  footerCopyright: string;
+  footerVisibility: FooterVisibility;
   lastPriceChangeAt: string;
   attributionText: string;
   attributionUrl: string;
@@ -161,6 +180,7 @@ export function CoreEditorForm({
         slogan: f.slogan,
         sloganEn: f.sloganEn,
         sloganAr: f.sloganAr,
+        sloganRu: f.sloganRu,
         establishedYear: f.establishedYear,
         currencyCode: f.currencyCode.trim().toUpperCase(),
         phone: f.phone,
@@ -173,19 +193,34 @@ export function CoreEditorForm({
         workingHours: f.workingHours,
         workingHoursEn: f.workingHoursEn,
         workingHoursAr: f.workingHoursAr,
+        workingHoursRu: f.workingHoursRu,
+        timezone: f.timezone,
+        weeklyHours: f.weeklyHours,
         instagramUrl: f.instagramUrl,
+        facebookUrl: f.facebookUrl,
         tiktokUrl: f.tiktokUrl,
+        xUrl: f.xUrl,
+        youtubeUrl: f.youtubeUrl,
         googleMapsUrl: f.googleMapsUrl,
         googleReviewsUrl: f.googleReviewsUrl,
         kdvNotice: f.kdvNotice,
         kdvNoticeEn: f.kdvNoticeEn,
         kdvNoticeAr: f.kdvNoticeAr,
+        kdvNoticeRu: f.kdvNoticeRu,
         allergenNotice: f.allergenNotice,
         allergenNoticeEn: f.allergenNoticeEn,
         allergenNoticeAr: f.allergenNoticeAr,
+        allergenNoticeRu: f.allergenNoticeRu,
         nutritionNotice: f.nutritionNotice,
         nutritionNoticeEn: f.nutritionNoticeEn,
         nutritionNoticeAr: f.nutritionNoticeAr,
+        nutritionNoticeRu: f.nutritionNoticeRu,
+        footerDescription: f.footerDescription,
+        footerDescriptionEn: f.footerDescriptionEn,
+        footerDescriptionAr: f.footerDescriptionAr,
+        footerDescriptionRu: f.footerDescriptionRu,
+        footerCopyright: f.footerCopyright,
+        footerVisibility: f.footerVisibility,
         lastPriceChangeAt: f.lastPriceChangeAt,
         attributionText: f.attributionText,
         attributionUrl: f.attributionUrl,
@@ -306,20 +341,14 @@ export function CoreEditorForm({
               label="Cover image"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="slogan">Slogan (Türkçe)</Label>
-            <Input id="slogan" value={f.slogan} onChange={(e) => set("slogan", e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="sloganEn">Slogan (EN)</Label>
-              <Input id="sloganEn" value={f.sloganEn} onChange={(e) => set("sloganEn", e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="sloganAr">Slogan (AR)</Label>
-              <Input id="sloganAr" value={f.sloganAr} onChange={(e) => set("sloganAr", e.target.value)} dir="rtl" />
-            </div>
-          </div>
+          <LocalizedTextareas
+            label="Slogan"
+            values={[f.slogan, f.sloganEn, f.sloganAr, f.sloganRu]}
+            onChange={(index, value) => set(([
+              "slogan", "sloganEn", "sloganAr", "sloganRu",
+            ] as const)[index], value)}
+            rows={1}
+          />
         </CardContent>
       </Card>
 
@@ -365,12 +394,6 @@ export function CoreEditorForm({
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Phone" value={f.phone} onChange={(v) => set("phone", v)} placeholder="+90 …" />
-            <Field label="Email" value={f.email} onChange={(v) => set("email", v)} placeholder="hello@example.com" type="email" />
-            <Field label="WhatsApp number" value={f.whatsappNumber} onChange={(v) => set("whatsappNumber", v)} placeholder="+90 …" />
-            <Field label="Website URL" value={f.websiteUrl} onChange={(v) => set("websiteUrl", v)} placeholder="https://…" type="url" />
-            <Field label="District" value={f.district} onChange={(v) => set("district", v)} />
-            <Field label="City" value={f.city} onChange={(v) => set("city", v)} />
             <Field
               label="Established year"
               value={f.establishedYear?.toString() ?? ""}
@@ -385,21 +408,88 @@ export function CoreEditorForm({
               placeholder="TRY"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="address">{t("Address")}</Label>
-            <Textarea id="address" value={f.address} onChange={(e) => set("address", e.target.value)} rows={2} />
+        </CardContent>
+      </Card>
+
+      <Card id="footer" className="scroll-mt-36">
+        <CardHeader>
+          <CardTitle className="text-base">{t("Restaurant footer")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-6">
+          <p className="text-sm text-muted-foreground">
+            {t("Empty fields are hidden automatically. Visibility switches let you keep saved information private.")}
+          </p>
+
+          <FooterBlock
+            label="Footer description"
+            visible={f.footerVisibility.description}
+            onVisible={(visible) => set("footerVisibility", { ...f.footerVisibility, description: visible })}
+          >
+            <LocalizedTextareas
+              label="Footer description"
+              values={[f.footerDescription, f.footerDescriptionEn, f.footerDescriptionAr, f.footerDescriptionRu]}
+              onChange={(index, value) => set(([
+                "footerDescription", "footerDescriptionEn", "footerDescriptionAr", "footerDescriptionRu",
+              ] as const)[index], value)}
+            />
+          </FooterBlock>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <FooterTextField field="phone" label="Phone" value={f.phone} onChange={(v) => set("phone", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} placeholder="+90 …" />
+            <FooterTextField field="whatsapp" label="WhatsApp number" value={f.whatsappNumber} onChange={(v) => set("whatsappNumber", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} placeholder={t("Leave blank to use the phone number")} />
+            <FooterTextField field="email" label="Email" value={f.email} onChange={(v) => set("email", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} placeholder="hello@example.com" type="email" />
+            <FooterTextField field="website" label="Website URL" value={f.websiteUrl} onChange={(v) => set("websiteUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} placeholder="https://…" type="url" />
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Google Maps URL" value={f.googleMapsUrl} onChange={(v) => set("googleMapsUrl", v)} />
-            <Field label="Google Reviews URL" value={f.googleReviewsUrl} onChange={(v) => set("googleReviewsUrl", v)} />
-            <Field label="Instagram URL" value={f.instagramUrl} onChange={(v) => set("instagramUrl", v)} />
-            <Field label="TikTok URL" value={f.tiktokUrl} onChange={(v) => set("tiktokUrl", v)} />
+
+          <FooterBlock
+            label="Address"
+            visible={f.footerVisibility.address}
+            onVisible={(visible) => set("footerVisibility", { ...f.footerVisibility, address: visible })}
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="District" value={f.district} onChange={(v) => set("district", v)} />
+              <Field label="City" value={f.city} onChange={(v) => set("city", v)} />
+            </div>
+            <Textarea value={f.address} onChange={(e) => set("address", e.target.value)} rows={2} placeholder={t("Street address")} />
+          </FooterBlock>
+
+          <div className="grid gap-4 lg:grid-cols-2">
+            <FooterTextField field="maps" label="Google Maps URL" value={f.googleMapsUrl} onChange={(v) => set("googleMapsUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} placeholder={t("Optional; generated from the address when empty")} type="url" />
+            <FooterTextField field="reviews" label="Google Reviews URL" value={f.googleReviewsUrl} onChange={(v) => set("googleReviewsUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} type="url" />
           </div>
-          <LocalizedTextareas
-            label="Working hours"
-            values={[f.workingHours, f.workingHoursEn, f.workingHoursAr]}
-            onChange={(index, value) => set((["workingHours", "workingHoursEn", "workingHoursAr"] as const)[index], value)}
+
+          <FooterBlock
+            label="Opening hours"
+            visible={f.footerVisibility.hours}
+            onVisible={(visible) => set("footerVisibility", { ...f.footerVisibility, hours: visible })}
+          >
+            <Field label="Restaurant timezone" value={f.timezone} onChange={(v) => set("timezone", v)} placeholder="Europe/Istanbul" />
+            <WeeklyHoursEditor value={f.weeklyHours} onChange={(weeklyHours) => set("weeklyHours", weeklyHours)} />
+          </FooterBlock>
+
+          <div>
+            <h3 className="mb-3 text-sm font-semibold">{t("Social media")}</h3>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <FooterTextField field="instagram" label="Instagram URL" value={f.instagramUrl} onChange={(v) => set("instagramUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} type="url" />
+              <FooterTextField field="facebook" label="Facebook URL" value={f.facebookUrl} onChange={(v) => set("facebookUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} type="url" />
+              <FooterTextField field="tiktok" label="TikTok URL" value={f.tiktokUrl} onChange={(v) => set("tiktokUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} type="url" />
+              <FooterTextField field="x" label="X URL" value={f.xUrl} onChange={(v) => set("xUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} type="url" />
+              <FooterTextField field="youtube" label="YouTube URL" value={f.youtubeUrl} onChange={(v) => set("youtubeUrl", v)} visibility={f.footerVisibility} onVisibility={(next) => set("footerVisibility", next)} type="url" />
+            </div>
+          </div>
+
+          <FooterTextField
+            field="copyright"
+            label="Copyright line"
+            value={f.footerCopyright}
+            onChange={(v) => set("footerCopyright", v)}
+            visibility={f.footerVisibility}
+            onVisibility={(next) => set("footerVisibility", next)}
+            placeholder={`© ${new Date().getFullYear()} ${f.businessName}.`}
           />
+          <p className="text-xs text-muted-foreground">
+            {t("Leave copyright empty to use the automatically generated line.")}
+          </p>
         </CardContent>
       </Card>
 
@@ -410,8 +500,8 @@ export function CoreEditorForm({
         <CardContent className="flex flex-col gap-4">
           <LocalizedTextareas
             label="KDV / tax notice"
-            values={[f.kdvNotice, f.kdvNoticeEn, f.kdvNoticeAr]}
-            onChange={(index, value) => set((["kdvNotice", "kdvNoticeEn", "kdvNoticeAr"] as const)[index], value)}
+            values={[f.kdvNotice, f.kdvNoticeEn, f.kdvNoticeAr, f.kdvNoticeRu]}
+            onChange={(index, value) => set((["kdvNotice", "kdvNoticeEn", "kdvNoticeAr", "kdvNoticeRu"] as const)[index], value)}
           />
           <Field
             label="Last price update"
@@ -421,40 +511,16 @@ export function CoreEditorForm({
           />
           <LocalizedTextareas
             label="Allergen notice"
-            values={[f.allergenNotice, f.allergenNoticeEn, f.allergenNoticeAr]}
-            onChange={(index, value) => set((["allergenNotice", "allergenNoticeEn", "allergenNoticeAr"] as const)[index], value)}
+            values={[f.allergenNotice, f.allergenNoticeEn, f.allergenNoticeAr, f.allergenNoticeRu]}
+            onChange={(index, value) => set((["allergenNotice", "allergenNoticeEn", "allergenNoticeAr", "allergenNoticeRu"] as const)[index], value)}
           />
           <LocalizedTextareas
             label="Nutrition notice"
-            values={[f.nutritionNotice, f.nutritionNoticeEn, f.nutritionNoticeAr]}
-            onChange={(index, value) => set((["nutritionNotice", "nutritionNoticeEn", "nutritionNoticeAr"] as const)[index], value)}
+            values={[f.nutritionNotice, f.nutritionNoticeEn, f.nutritionNoticeAr, f.nutritionNoticeRu]}
+            onChange={(index, value) => set((["nutritionNotice", "nutritionNoticeEn", "nutritionNoticeAr", "nutritionNoticeRu"] as const)[index], value)}
           />
           <p className="text-xs text-muted-foreground">
             {t("Leave notices and dates blank when the restaurant has not supplied or approved the facts.")}
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card id="footer-attribution" className="scroll-mt-36">
-        <CardHeader>
-          <CardTitle className="text-base">{t("Footer attribution")}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label="Attribution text"
-            value={f.attributionText}
-            onChange={(v) => set("attributionText", v)}
-            placeholder="Powered by Menufy"
-          />
-          <Field
-            label="Attribution URL"
-            value={f.attributionUrl}
-            onChange={(v) => set("attributionUrl", v)}
-            placeholder="https://…"
-            type="url"
-          />
-          <p className="text-xs text-muted-foreground sm:col-span-2">
-            {t("Optional. Leave the text blank to hide attribution.")}
           </p>
         </CardContent>
       </Card>
@@ -468,7 +534,7 @@ export function CoreEditorForm({
           <div className="flex flex-col gap-2">
             <Label>{t("Enabled languages")}</Label>
             <div className="flex flex-wrap gap-4">
-              {(["tr", "en", "ar"] as Lang[]).map((l) => (
+              {(["tr", "en", "ar", "ru"] as Lang[]).map((l) => (
                 <label key={l} className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={f.enabledLangs.includes(l)}
@@ -598,13 +664,15 @@ function LocalizedTextareas({
   label,
   values,
   onChange,
+  rows = 2,
 }: {
   label: string;
-  values: [string, string, string];
+  values: [string, string, string, string];
   onChange: (index: number, value: string) => void;
+  rows?: number;
 }) {
   const { t } = usePanelI18n();
-  const placeholders = ["Türkçe", "English", "العربية"];
+  const placeholders = ["Türkçe", "English", "العربية", "Русский"];
   return (
     <div className="flex flex-col gap-2">
       <Label>{t(label)}</Label>
@@ -615,8 +683,140 @@ function LocalizedTextareas({
           onChange={(e) => onChange(index, e.target.value)}
           placeholder={placeholders[index]}
           dir={index === 2 ? "rtl" : "ltr"}
-          rows={2}
+          rows={rows}
         />
+      ))}
+    </div>
+  );
+}
+
+function FooterBlock({
+  label,
+  visible,
+  onVisible,
+  children,
+}: {
+  label: string;
+  visible: boolean;
+  onVisible: (visible: boolean) => void;
+  children: React.ReactNode;
+}) {
+  const { t } = usePanelI18n();
+  return (
+    <section className="rounded-lg border p-4">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h3 className="text-sm font-semibold">{t(label)}</h3>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          {t("Show in footer")}
+          <Switch checked={visible} onCheckedChange={onVisible} />
+        </label>
+      </div>
+      <div className="flex flex-col gap-4">{children}</div>
+    </section>
+  );
+}
+
+function FooterTextField({
+  field,
+  label,
+  value,
+  onChange,
+  visibility,
+  onVisibility,
+  placeholder,
+  type = "text",
+}: {
+  field: FooterFieldKey;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  visibility: FooterVisibility;
+  onVisibility: (visibility: FooterVisibility) => void;
+  placeholder?: string;
+  type?: React.HTMLInputTypeAttribute;
+}) {
+  const { t } = usePanelI18n();
+  const id = `footer-${field}`;
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <Label htmlFor={id}>{t(label)}</Label>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          {t("Show")}
+          <Switch
+            checked={visibility[field]}
+            onCheckedChange={(visible) => onVisibility({ ...visibility, [field]: visible })}
+          />
+        </label>
+      </div>
+      <Input id={id} type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
+function WeeklyHoursEditor({
+  value,
+  onChange,
+}: {
+  value: DayHours[];
+  onChange: (value: DayHours[]) => void;
+}) {
+  const { t } = usePanelI18n();
+  const dayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+  function updateDay(day: number, patch: Partial<DayHours>) {
+    onChange(value.map((entry) => entry.day === day ? { ...entry, ...patch } : entry));
+  }
+
+  function updatePeriod(day: number, index: number, key: "start" | "end", next: string) {
+    const target = value.find((entry) => entry.day === day);
+    if (!target) return;
+    updateDay(day, {
+      periods: target.periods.map((period, periodIndex) =>
+        periodIndex === index ? { ...period, [key]: next } : period,
+      ),
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {value.map((entry) => (
+        <div key={entry.day} className="rounded-lg border p-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="min-w-24 text-sm font-medium">{t(dayLabels[entry.day])}</p>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <label className="flex items-center gap-2">
+                <Checkbox checked={entry.closed} onCheckedChange={(checked) => updateDay(entry.day, { closed: Boolean(checked), allDay: false })} />
+                {t("Closed")}
+              </label>
+              <label className="flex items-center gap-2">
+                <Checkbox checked={entry.allDay} disabled={entry.closed} onCheckedChange={(checked) => updateDay(entry.day, { allDay: Boolean(checked) })} />
+                {t("Open 24 hours")}
+              </label>
+            </div>
+          </div>
+          {!entry.closed && !entry.allDay && (
+            <div className="mt-3 flex flex-col gap-2">
+              {entry.periods.map((period, index) => (
+                <div key={`${entry.day}-${index}`} className="flex flex-wrap items-center gap-2">
+                  <Input className="w-32" type="time" value={period.start} onChange={(event) => updatePeriod(entry.day, index, "start", event.target.value)} />
+                  <span className="text-muted-foreground">–</span>
+                  <Input className="w-32" type="time" value={period.end} onChange={(event) => updatePeriod(entry.day, index, "end", event.target.value)} />
+                  {entry.periods.length > 1 && (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => updateDay(entry.day, { periods: entry.periods.filter((_, periodIndex) => periodIndex !== index) })}>
+                      {t("Remove")}
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {entry.periods.length < 4 && (
+                <Button type="button" variant="outline" size="sm" className="w-fit" onClick={() => updateDay(entry.day, { periods: [...entry.periods, { start: "17:00", end: "22:00" }] })}>
+                  {t("Add time period")}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       ))}
     </div>
   );

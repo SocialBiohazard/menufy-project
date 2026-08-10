@@ -22,6 +22,7 @@ type SavedCategory = {
   name: string;
   nameEn: string | null;
   nameAr: string | null;
+  nameRu: string | null;
   imageUrl: string | null;
 };
 
@@ -45,13 +46,14 @@ export function CategoryDialog({
   const [name, setName] = useState(editing?.name ?? "");
   const [nameEn, setNameEn] = useState(editing?.nameEn ?? "");
   const [nameAr, setNameAr] = useState(editing?.nameAr ?? "");
+  const [nameRu, setNameRu] = useState(editing?.nameRu ?? "");
   const [imageUrl, setImageUrl] = useState(editing?.imageUrl ?? "");
   const imageFieldRef = useRef<ImageFieldHandle>(null);
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     startTransition(async () => {
-      const input = { name, nameEn, nameAr, imageUrl };
+      const input = { name, nameEn, nameAr, nameRu, imageUrl };
       const res = editing
         ? await updateCategory(editing.id, input)
         : await createCategory(restaurantId, input);
@@ -98,6 +100,10 @@ export function CategoryDialog({
           <div className="flex flex-col gap-2">
             <Label htmlFor="cat-ar">Name (العربية)</Label>
             <Input id="cat-ar" value={nameAr} onChange={(e) => setNameAr(e.target.value)} dir="rtl" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="cat-ru">Name (Русский)</Label>
+            <Input id="cat-ru" value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={pending || !name}>

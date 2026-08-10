@@ -8,6 +8,7 @@ import { isManagedMediaUrl } from "@/lib/media-url";
 import { type Lang, LANG_LABELS, UI, isRtl, pick } from "@/lib/i18n";
 import { type ThemeTokens, themeToCssVars } from "@/lib/themes";
 import { ItemCard } from "./ItemCard";
+import { RestaurantFooter } from "./RestaurantFooter";
 
 interface Props {
   menu: MenuData;
@@ -60,67 +61,6 @@ export function MenuView({ menu, theme, enabledLangs, defaultLang }: Props) {
         <RestaurantFooter menu={menu} lang={lang} />
       </div>
     </div>
-  );
-}
-
-function RestaurantFooter({ menu, lang }: { menu: MenuData; lang: Lang }) {
-  const record = menu.workingHours && typeof menu.workingHours === "object" && !Array.isArray(menu.workingHours)
-    ? menu.workingHours as Record<string, unknown>
-    : {};
-  const localizedHours = lang === "en" ? record.displayEn : lang === "ar" ? record.displayAr : record.display;
-  const hours = typeof localizedHours === "string"
-    ? localizedHours
-    : typeof record.display === "string" ? record.display : "";
-  const address = [menu.address, menu.district, menu.city].filter(Boolean).join(", ");
-  const taxNotice = pick(menu, "kdvNotice", lang);
-  const whatsappDigits = menu.whatsappNumber?.replace(/\D/g, "");
-  const links = [
-    menu.phone && { href: `tel:${menu.phone.replace(/[^+\d]/g, "")}`, label: menu.phone },
-    menu.email && { href: `mailto:${menu.email}`, label: menu.email },
-    whatsappDigits && { href: `https://wa.me/${whatsappDigits}`, label: "WhatsApp" },
-    menu.websiteUrl && { href: menu.websiteUrl, label: "Website" },
-    menu.googleMapsUrl && { href: menu.googleMapsUrl, label: "Maps" },
-    menu.googleReviewsUrl && { href: menu.googleReviewsUrl, label: "Reviews" },
-    menu.instagramUrl && { href: menu.instagramUrl, label: "Instagram" },
-    menu.tiktokUrl && { href: menu.tiktokUrl, label: "TikTok" },
-  ].filter(Boolean) as { href: string; label: string }[];
-
-  return (
-    <footer className="border-t border-[var(--menu-border)] px-4 py-8 text-center">
-      <p className="font-display text-lg text-[var(--menu-primary)]">{menu.businessName}</p>
-      {(menu.businessType || menu.establishedYear) && (
-        <p className="mt-0.5 text-xs text-[var(--menu-text-muted)]">
-          {[menu.businessType, menu.establishedYear ? String(menu.establishedYear) : ""].filter(Boolean).join(" · ")}
-        </p>
-      )}
-      {address && <p className="mx-auto mt-3 max-w-lg text-sm text-[var(--menu-text-muted)]">{address}</p>}
-      {hours && <p className="mt-1 text-sm text-[var(--menu-text-muted)]">{hours}</p>}
-      {links.length > 0 && (
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          {links.map((link) => (
-            <a
-              key={`${link.label}-${link.href}`}
-              href={link.href}
-              target={link.href.startsWith("http") ? "_blank" : undefined}
-              rel="noreferrer"
-              className="rounded-full border border-[var(--menu-border)] px-3 py-1.5 text-xs text-[var(--menu-primary)]"
-            >
-              {link.label}
-            </a>
-          ))}
-        </div>
-      )}
-      {taxNotice && <p className="mt-4 text-xs text-[var(--menu-text-muted)]">{taxNotice}</p>}
-      {menu.attributionText && (
-        menu.attributionUrl ? (
-          <a href={menu.attributionUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs text-[var(--menu-text-muted)]">
-            {menu.attributionText}
-          </a>
-        ) : (
-          <p className="mt-4 text-xs text-[var(--menu-text-muted)]">{menu.attributionText}</p>
-        )
-      )}
-    </footer>
   );
 }
 

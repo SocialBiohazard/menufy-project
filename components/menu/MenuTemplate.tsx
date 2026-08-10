@@ -13,9 +13,11 @@ import { InciHeritageMenu } from "./InciHeritageMenu";
 export function MenuTemplate({ menu }: { menu: MenuData }) {
   const theme = resolveTheme(menu.templateType, menu);
   const enabledLangs = (menu.enabledLangs as Lang[]).filter((l) =>
-    ["tr", "en", "ar"].includes(l),
+    ["tr", "en", "ar", "ru"].includes(l),
   );
-  const defaultLang = (menu.defaultLang as Lang) ?? "tr";
+  const defaultLang = enabledLangs.includes(menu.defaultLang as Lang)
+    ? menu.defaultLang as Lang
+    : enabledLangs[0] ?? "tr";
 
   if (menu.templateType === "inci-heritage") {
     return (

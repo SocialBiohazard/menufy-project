@@ -22,8 +22,8 @@ import {
 } from "@/components/ui/dialog";
 
 const EMPTY = {
-  name: "", nameEn: "", nameAr: "",
-  description: "", descriptionEn: "", descriptionAr: "",
+  name: "", nameEn: "", nameAr: "", nameRu: "",
+  description: "", descriptionEn: "", descriptionAr: "", descriptionRu: "",
   price: "", imageUrl: "", ingredients: "", portionGrams: "",
   isNew: false, isFeatured: false, isAvailable: true, hasAlcohol: false, hasPork: false,
   allergenIds: [] as number[],
@@ -40,8 +40,8 @@ function numOrNull(s: string): number | null {
 function stateFor(editing?: BuilderItem): FormState {
   if (!editing) return { ...EMPTY, allergenIds: [] };
   return {
-    name: editing.name, nameEn: editing.nameEn, nameAr: editing.nameAr,
-    description: editing.description, descriptionEn: editing.descriptionEn, descriptionAr: editing.descriptionAr,
+    name: editing.name, nameEn: editing.nameEn, nameAr: editing.nameAr, nameRu: editing.nameRu,
+    description: editing.description, descriptionEn: editing.descriptionEn, descriptionAr: editing.descriptionAr, descriptionRu: editing.descriptionRu,
     price: String(editing.price), imageUrl: editing.imageUrl, ingredients: editing.ingredients,
     portionGrams: editing.portionGrams?.toString() ?? "",
     isNew: editing.isNew, isFeatured: editing.isFeatured, isAvailable: editing.isAvailable,
@@ -99,8 +99,8 @@ export function ItemDialog({
     e.preventDefault();
     startTransition(async () => {
       const input = {
-        name: f.name, nameEn: f.nameEn, nameAr: f.nameAr,
-        description: f.description, descriptionEn: f.descriptionEn, descriptionAr: f.descriptionAr,
+        name: f.name, nameEn: f.nameEn, nameAr: f.nameAr, nameRu: f.nameRu,
+        description: f.description, descriptionEn: f.descriptionEn, descriptionAr: f.descriptionAr, descriptionRu: f.descriptionRu,
         price: Number(f.price) || 0,
         portionGrams: numOrNull(f.portionGrams),
         imageUrl: f.imageUrl,
@@ -154,8 +154,8 @@ export function ItemDialog({
           <FieldTrio
             label="Name"
             required
-            values={[f.name, f.nameEn, f.nameAr]}
-            onChange={(i, v) => set((["name", "nameEn", "nameAr"] as const)[i], v)}
+            values={[f.name, f.nameEn, f.nameAr, f.nameRu]}
+            onChange={(i, v) => set((["name", "nameEn", "nameAr", "nameRu"] as const)[i], v)}
           />
 
           <div className="flex flex-col gap-2">
@@ -163,6 +163,7 @@ export function ItemDialog({
             <Textarea value={f.description} onChange={(e) => set("description", e.target.value)} placeholder="Türkçe" rows={2} />
             <Textarea value={f.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} placeholder="English" rows={2} />
             <Textarea value={f.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} placeholder="العربية" dir="rtl" rows={2} />
+            <Textarea value={f.descriptionRu} onChange={(e) => set("descriptionRu", e.target.value)} placeholder="Русский" rows={2} />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -282,10 +283,10 @@ function FieldTrio({
 }: {
   label: string;
   required?: boolean;
-  values: [string, string, string];
+  values: [string, string, string, string];
   onChange: (i: number, v: string) => void;
 }) {
-  const ph = ["Türkçe", "English", "العربية"];
+  const ph = ["Türkçe", "English", "العربية", "Русский"];
   return (
     <div className="flex flex-col gap-2">
       <Label>

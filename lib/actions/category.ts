@@ -38,6 +38,7 @@ export async function createCategory(restaurantId: string, input: CategoryInput)
       name: parsed.data.name,
       nameEn: parsed.data.nameEn || null,
       nameAr: parsed.data.nameAr || null,
+      nameRu: parsed.data.nameRu || null,
       imageUrl: parsed.data.imageUrl || null,
       sortOrder: (max._max.sortOrder ?? -1) + 1,
     },
@@ -71,6 +72,7 @@ export async function updateCategory(id: string, input: CategoryInput) {
       name: parsed.data.name,
       nameEn: parsed.data.nameEn || null,
       nameAr: parsed.data.nameAr || null,
+      nameRu: parsed.data.nameRu || null,
       imageUrl: parsed.data.imageUrl || null,
     },
   });

@@ -1,6 +1,7 @@
 import type { Restaurant } from "@/generated/prisma/client";
 import type { CoreFormData } from "@/components/admin/CoreEditorForm";
 import type { Lang } from "@/lib/i18n";
+import { normalizeFooterVisibility, normalizeWeeklyHours } from "@/lib/restaurant-footer";
 
 function workingHoursText(value: unknown, field = "display"): string {
   if (!value || typeof value !== "object" || Array.isArray(value)) return "";
@@ -26,6 +27,7 @@ export function restaurantToCoreFormData(r: Restaurant): CoreFormData {
     slogan: r.slogan ?? "",
     sloganEn: r.sloganEn ?? "",
     sloganAr: r.sloganAr ?? "",
+    sloganRu: r.sloganRu ?? "",
     establishedYear: r.establishedYear,
     currencyCode: r.currencyCode,
     phone: r.phone ?? "",
@@ -38,19 +40,34 @@ export function restaurantToCoreFormData(r: Restaurant): CoreFormData {
     workingHours: workingHoursText(r.workingHours),
     workingHoursEn: workingHoursText(r.workingHours, "displayEn"),
     workingHoursAr: workingHoursText(r.workingHours, "displayAr"),
+    workingHoursRu: workingHoursText(r.workingHours, "displayRu"),
+    timezone: r.timezone,
+    weeklyHours: normalizeWeeklyHours(r.workingHours, r.timezone).schedule,
     instagramUrl: r.instagramUrl ?? "",
+    facebookUrl: r.facebookUrl ?? "",
     tiktokUrl: r.tiktokUrl ?? "",
+    xUrl: r.xUrl ?? "",
+    youtubeUrl: r.youtubeUrl ?? "",
     googleMapsUrl: r.googleMapsUrl ?? "",
     googleReviewsUrl: r.googleReviewsUrl ?? "",
     kdvNotice: r.kdvNotice ?? "",
     kdvNoticeEn: r.kdvNoticeEn ?? "",
     kdvNoticeAr: r.kdvNoticeAr ?? "",
+    kdvNoticeRu: r.kdvNoticeRu ?? "",
     allergenNotice: r.allergenNotice ?? "",
     allergenNoticeEn: r.allergenNoticeEn ?? "",
     allergenNoticeAr: r.allergenNoticeAr ?? "",
+    allergenNoticeRu: r.allergenNoticeRu ?? "",
     nutritionNotice: r.nutritionNotice ?? "",
     nutritionNoticeEn: r.nutritionNoticeEn ?? "",
     nutritionNoticeAr: r.nutritionNoticeAr ?? "",
+    nutritionNoticeRu: r.nutritionNoticeRu ?? "",
+    footerDescription: r.footerDescription ?? "",
+    footerDescriptionEn: r.footerDescriptionEn ?? "",
+    footerDescriptionAr: r.footerDescriptionAr ?? "",
+    footerDescriptionRu: r.footerDescriptionRu ?? "",
+    footerCopyright: r.footerCopyright ?? "",
+    footerVisibility: normalizeFooterVisibility(r.footerVisibility),
     lastPriceChangeAt: r.lastPriceChangeAt?.toISOString().slice(0, 10) ?? "",
     attributionText: r.attributionText ?? "",
     attributionUrl: r.attributionUrl ?? "",
