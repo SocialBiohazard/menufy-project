@@ -252,7 +252,8 @@ export const itemSchema = z.object({
   price: z.coerce.number().int().min(0, "Price must be 0 or more"),
   imageUrl: optionalImage,
   ingredients: z.string().optional(),
-  portionGrams: z.coerce.number().int().positive().optional().nullable(),
+  portionAmount: z.coerce.number().positive().max(100_000).optional().nullable(),
+  portionUnit: z.enum(["G", "ML", "L"]).optional().nullable(),
   isNew: z.boolean().default(false),
   isFeatured: z.boolean().default(false),
   isAvailable: z.boolean().default(true),
@@ -270,5 +271,13 @@ export const itemSchema = z.object({
   saltG: z.coerce.number().optional().nullable(),
   nutritionBasis: z.enum(["100g", "100ml", "per portion"]).optional().nullable(),
   nutritionEstimated: z.boolean().default(false),
+}).superRefine((item, context) => {
+  if ((item.portionAmount == null) !== (item.portionUnit == null)) {
+    context.addIssue({
+      code: "custom",
+      path: [item.portionAmount == null ? "portionAmount" : "portionUnit"],
+      message: "Enter both a portion amount and unit",
+    });
+  }
 });
 export type ItemInput = z.infer<typeof itemSchema>;

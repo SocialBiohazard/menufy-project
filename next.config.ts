@@ -11,6 +11,10 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    // Generated menu images have content-addressed URLs, so optimized variants
+    // can remain cached for a long time at the browser/CDN boundary.
+    minimumCacheTTL: 31_536_000,
+    qualities: [60, 70, 75, 80],
     remotePatterns: [
       // Sample/demo imagery.
       { protocol: "https", hostname: "images.unsplash.com" },

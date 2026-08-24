@@ -4,6 +4,7 @@ import {
   AssignRestaurantForm,
   CustomerAccountLifecycle,
   CustomerAccountSettings,
+  OperatorInviteCustomerForm,
 } from "@/components/admin/CustomerAccountControls";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,10 @@ export default async function CustomerManagementPage() {
                   account.maxStorageBytes / (BigInt(1024) * BigInt(1024)),
                 ),
                 isActive: account.isActive,
+              }} />
+              <OperatorInviteCustomerForm account={{
+                id: account.id,
+                restaurants: account.restaurants.map(({ id, businessName }) => ({ id, businessName })),
               }} />
               <CustomerAccountLifecycle account={{
                 id: account.id,

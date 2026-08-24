@@ -10,14 +10,14 @@ export async function GET(
   const media = await getManagedImage(key.join("/"));
   if (!media) return new Response(null, { status: 404 });
 
-  if (media.kind === "redirect") {
-    return Response.redirect(media.url, 307);
-  }
-
   return new Response(new Uint8Array(media.body), {
     headers: {
-      "Content-Type": "image/webp",
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Content-Type": media.contentType,
+      ...(media.contentLength
+        ? { "Content-Length": String(media.contentLength) }
+        : {}),
+      "Cache-Control":
+        "public, max-age=31536000, s-maxage=31536000, immutable",
       "X-Content-Type-Options": "nosniff",
     },
   });

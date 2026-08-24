@@ -3,7 +3,7 @@ import "server-only";
 import type { CustomerRole } from "@/generated/prisma/client";
 import { getOperator } from "@/lib/auth";
 import { getCustomerUser } from "@/lib/customer-auth";
-import { roleAllows } from "@/lib/customer-roles";
+import { membershipsAllowRestaurantAccess, restaurantAccessRole } from "@/lib/customer-roles";
 
 export type AppActor =
   | { type: "OPERATOR"; id: string; email: string; role: "OPERATOR" }
@@ -36,21 +36,23 @@ export async function getRestaurantAccess(
   if (operator) return { type: "OPERATOR", ...operator, role: "OPERATOR" };
 
   const customer = await getCustomerUser();
-  const membership = customer?.memberships.find(
-    (entry) => entry.restaurantId === restaurantId,
-  );
   if (
     !customer ||
-    !membership ||
-    !roleAllows(membership.role, minimumRole)
+    !membershipsAllowRestaurantAccess(
+      customer.memberships,
+      restaurantId,
+      minimumRole,
+    )
   ) {
     return null;
   }
+  const role = restaurantAccessRole(customer.memberships, restaurantId);
+  if (!role) return null;
   return {
     type: "CUSTOMER",
     id: customer.id,
     email: customer.email,
-    role: membership.role,
+    role,
   };
 }
 

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
-const STEPS = ["Customer", "Locations", "Access", "Review"] as const;
+const STEPS = ["Customer", "Locations", "Review"] as const;
 
 export function CustomerManagementForm({
   restaurants,
@@ -27,9 +27,8 @@ export function CustomerManagementForm({
   const [accountName, setAccountName] = useState("");
   const [email, setEmail] = useState("");
   const [restaurantIds, setRestaurantIds] = useState<string[]>([]);
-  const [plan, setPlan] = useState<"TRIAL" | "BASIC" | "PRO">("TRIAL");
-  const [maxRestaurants, setMaxRestaurants] = useState(1);
-  const [maxStorageMb, setMaxStorageMb] = useState(1024);
+  const maxRestaurants = Math.max(restaurantIds.length, 1);
+  const maxStorageMb = 1024;
 
   if (state.activationPath) {
     return (
@@ -81,15 +80,13 @@ export function CustomerManagementForm({
   const canContinue =
     (step === 0 && accountName.trim().length >= 2 && email.includes("@")) ||
     (step === 1 && restaurantIds.length > 0) ||
-    (step === 2 && maxRestaurants >= restaurantIds.length) ||
-    step === 3;
+    step === 2;
 
   function toggleRestaurant(id: string) {
     setRestaurantIds((current) => {
       const next = current.includes(id)
         ? current.filter((restaurantId) => restaurantId !== id)
         : [...current, id];
-      setMaxRestaurants((limit) => Math.max(limit, next.length || 1));
       return next;
     });
   }
@@ -98,7 +95,7 @@ export function CustomerManagementForm({
     <Card>
       <CardHeader className="space-y-5">
         <CardTitle>{t("New customer onboarding")}</CardTitle>
-        <ol className="grid grid-cols-4 gap-2">
+        <ol className="grid grid-cols-3 gap-2">
           {STEPS.map((label, index) => (
             <li key={label} className="space-y-2">
               <div className={`h-1.5 rounded-full ${index <= step ? "bg-primary" : "bg-muted"}`} />
@@ -114,7 +111,7 @@ export function CustomerManagementForm({
           <input type="hidden" name="accountName" value={accountName} />
           <input type="hidden" name="email" value={email} />
           {restaurantIds.map((id) => <input key={id} type="hidden" name="restaurantIds" value={id} />)}
-          <input type="hidden" name="plan" value={plan} />
+          <input type="hidden" name="plan" value="TRIAL" />
           <input type="hidden" name="maxRestaurants" value={maxRestaurants} />
           <input type="hidden" name="maxStorageMb" value={maxStorageMb} />
 
@@ -161,37 +158,15 @@ export function CustomerManagementForm({
           )}
 
           {step === 2 && (
-            <div className="grid gap-5 sm:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="onboarding-plan">{t("Plan")}</Label>
-                <select id="onboarding-plan" value={plan} onChange={(event) => setPlan(event.target.value as typeof plan)} className="h-9 w-full rounded-md border bg-background px-3 text-sm">
-                  <option value="TRIAL">Trial</option>
-                  <option value="BASIC">Basic</option>
-                  <option value="PRO">Pro</option>
-                </select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="onboarding-location-limit">{t("Location limit")}</Label>
-                <Input id="onboarding-location-limit" type="number" min={restaurantIds.length || 1} value={maxRestaurants} onChange={(event) => setMaxRestaurants(Number(event.target.value))} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="onboarding-storage">{t("Storage limit (MB)")}</Label>
-                <Input id="onboarding-storage" type="number" min={100} value={maxStorageMb} onChange={(event) => setMaxStorageMb(Number(event.target.value))} />
-              </div>
-              <p className="text-sm text-muted-foreground sm:col-span-3">{t("These limits stay operator-only and can be changed later.")}</p>
-            </div>
-          )}
-
-          {step === 3 && (
             <div className="space-y-4">
               <h2 className="font-medium">{t("Review customer workspace")}</h2>
               <dl className="grid gap-3 rounded-md border p-4 text-sm sm:grid-cols-2">
                 <div><dt className="text-muted-foreground">{t("Customer")}</dt><dd className="font-medium">{accountName}</dd></div>
                 <div><dt className="text-muted-foreground">{t("Owner")}</dt><dd className="font-medium">{email}</dd></div>
                 <div><dt className="text-muted-foreground">{t("Locations")}</dt><dd className="font-medium">{selectedRestaurants.map((restaurant) => restaurant.businessName).join(", ")}</dd></div>
-                <div><dt className="text-muted-foreground">{t("Access")}</dt><dd className="font-medium">{plan.toLowerCase()} · {maxRestaurants} {t("Locations").toLowerCase()} · {maxStorageMb} MB</dd></div>
+                <div><dt className="text-muted-foreground">{t("Access")}</dt><dd className="font-medium">{t("Owner")} · {maxRestaurants} {t("Locations").toLowerCase()}</dd></div>
               </dl>
-              <p className="text-sm text-muted-foreground">{t("Creating the workspace assigns these restaurants and generates a one-time activation link. No email is sent automatically yet.")}</p>
+              <p className="text-sm text-muted-foreground">{t("Creating the workspace assigns these restaurants and generates a one-time activation link. No email is sent automatically yet.")} {t("Plan and storage limits can be changed later from the customer overview.")}</p>
             </div>
           )}
 

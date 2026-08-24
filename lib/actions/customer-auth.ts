@@ -3,6 +3,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { Prisma } from "@/generated/prisma/client";
 import { createCustomerSession, deleteCustomerSession, requireCustomerUser } from "@/lib/customer-auth";
 import { hashPassword, passwordValidationError, verifyPassword } from "@/lib/auth-password";
 import {
@@ -86,63 +87,72 @@ export async function activateCustomer(
     where: { email: invitation.email },
     select: { accountId: true },
   });
-  if (
-    existingUser &&
-    existingUser.accountId !== invitation.customerAccountId
-  ) {
-    return { error: "This email already belongs to another customer account" };
+  if (existingUser) {
+    return {
+      error: "This account is already active. Sign in instead of using an activation link.",
+    };
+  }
+
+  const assignedRestaurantCount = await prisma.restaurant.count({
+    where: {
+      id: { in: invitation.restaurantIds },
+      customerAccountId: invitation.customerAccountId,
+    },
+  });
+  if (assignedRestaurantCount !== invitation.restaurantIds.length) {
+    return { error: "This invitation no longer matches the assigned restaurants" };
   }
 
   const passwordHash = await hashPassword(password);
-  const user = await prisma.$transaction(async (tx) => {
-    const created = await tx.customerUser.upsert({
-      where: { email: invitation.email },
-      create: {
+  let user: { id: string };
+  try {
+    user = await prisma.$transaction(async (tx) => {
+      const created = await tx.customerUser.create({
+        data: {
         email: invitation.email,
         accountId: invitation.customerAccountId,
         passwordHash,
       },
-      update: {
-        accountId: invitation.customerAccountId,
-        passwordHash,
-        isActive: true,
-      },
-    });
-    for (const restaurantId of invitation.restaurantIds) {
-      await tx.restaurantMembership.upsert({
-        where: {
-          customerUserId_restaurantId: {
+      });
+      for (const restaurantId of invitation.restaurantIds) {
+        await tx.restaurantMembership.create({
+          data: {
             customerUserId: created.id,
             restaurantId,
+            role: invitation.role,
           },
-        },
-        create: {
-          customerUserId: created.id,
-          restaurantId,
-          role: invitation.role,
-        },
-        update: { role: invitation.role },
+        });
+      }
+      await tx.customerInvitation.update({
+        where: { id: invitation.id },
+        data: { acceptedAt: new Date() },
       });
-    }
-    await tx.customerInvitation.update({
-      where: { id: invitation.id },
-      data: { acceptedAt: new Date() },
-    });
-    const operators = await tx.operator.findMany({
-      where: { isActive: true },
-      select: { id: true },
-    });
-    if (operators.length) {
-      await tx.notification.createMany({
-        data: operators.map(({ id }) => ({
-          operatorId: id,
-          type: "CUSTOMER_ACTIVATED",
-          title: `${invitation.email} activated customer access`,
-        })),
+      const operators = await tx.operator.findMany({
+        where: { isActive: true },
+        select: { id: true },
       });
+      if (operators.length) {
+        await tx.notification.createMany({
+          data: operators.map(({ id }) => ({
+            operatorId: id,
+            type: "CUSTOMER_ACTIVATED",
+            title: `${invitation.email} activated customer access`,
+          })),
+        });
+      }
+      return created;
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        error: "This account is already active. Sign in instead of using an activation link.",
+      };
     }
-    return created;
-  });
+    throw error;
+  }
   await createCustomerSession(user.id);
   redirect("/portal/welcome");
 }

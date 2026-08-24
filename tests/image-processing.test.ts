@@ -25,8 +25,8 @@ test("uploaded images are decoded, resized, and normalized to WebP", async () =>
   const metadata = await sharp(output).metadata();
 
   assert.equal(metadata.format, "webp");
-  assert.equal(metadata.width, 1600);
-  assert.equal(metadata.height, 1108);
+  assert.equal(metadata.width, 1200);
+  assert.equal(metadata.height, 831);
   assert.ok(output.length < MAX_OUTPUT_IMAGE_BYTES);
 });
 

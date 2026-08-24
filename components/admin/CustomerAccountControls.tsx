@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, UserMinus, Unlink } from "lucide-react";
+import { Copy, Trash2, UserMinus, Unlink, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import {
   assignRestaurantToCustomer,
   deleteCustomerWorkspace,
+  inviteCustomerUserAsOperator,
   removeCustomerUser,
   unassignRestaurantFromCustomer,
   updateCustomerAccount,
@@ -261,6 +262,84 @@ export function CustomerAccountLifecycle({ account }: AccountLifecycleProps) {
         </AlertDialog>
       </div>
     </div>
+  );
+}
+
+export function OperatorInviteCustomerForm({
+  account,
+}: {
+  account: {
+    id: string;
+    restaurants: Array<{ id: string; businessName: string }>;
+  };
+}) {
+  const { t } = usePanelI18n();
+  const router = useRouter();
+  const [state, action, pending] = useActionState(inviteCustomerUserAsOperator, {
+    error: null,
+    activationPath: null,
+    message: null,
+  });
+  useEffect(() => {
+    if (state.activationPath || state.message) router.refresh();
+  }, [router, state.activationPath, state.message]);
+
+  if (!account.restaurants.length) return null;
+
+  return (
+    <form action={action} className="space-y-3 rounded-md border p-3">
+      <input type="hidden" name="accountId" value={account.id} />
+      <div className="flex items-center gap-2 text-sm font-medium">
+        <UserPlus className="size-4" />
+        {t("Add customer user")}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_9rem_auto] sm:items-end">
+        <div className="space-y-1">
+          <Label htmlFor={`customer-email-${account.id}`}>{t("Email")}</Label>
+          <Input id={`customer-email-${account.id}`} name="email" type="email" required />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={`customer-restaurant-${account.id}`}>{t("Restaurant")}</Label>
+          <select id={`customer-restaurant-${account.id}`} name="restaurantId" className="h-9 w-full rounded-md border bg-background px-2 text-sm" required>
+            {account.restaurants.map((restaurant) => (
+              <option key={restaurant.id} value={restaurant.id}>{restaurant.businessName}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={`customer-role-${account.id}`}>{t("Role")}</Label>
+          <select id={`customer-role-${account.id}`} name="role" defaultValue="OWNER" className="h-9 w-full rounded-md border bg-background px-2 text-sm">
+            <option value="OWNER">{t("Owner")}</option>
+            <option value="EDITOR">{t("Editor")}</option>
+            <option value="VIEWER">{t("Viewer")}</option>
+          </select>
+        </div>
+        <Button type="submit" size="sm" disabled={pending}>
+          {pending ? t("Creating…") : t("Add user")}
+        </Button>
+      </div>
+      {state.error && <p className="text-sm text-destructive">{state.error}</p>}
+      {state.message && <p className="text-sm text-emerald-700">{t(state.message)}</p>}
+      {state.activationPath && (
+        <div className="space-y-2 rounded-md bg-muted p-3 text-sm">
+          <p>{t("Send this one-time activation link to the customer. It expires after seven days.")}</p>
+          <a href={state.activationPath} target="_blank" rel="noreferrer" className="block break-all font-mono text-primary underline">
+            {state.activationPath}
+          </a>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              await navigator.clipboard.writeText(state.activationPath!);
+              toast.success(t("Activation link copied"));
+            }}
+          >
+            <Copy className="size-4" /> {t("Copy link")}
+          </Button>
+        </div>
+      )}
+    </form>
   );
 }
 

@@ -1,8 +1,8 @@
-import Image from "next/image";
 import type { CSSProperties } from "react";
 import type { MenuItem } from "@/lib/menu";
-import { isManagedMediaUrl } from "@/lib/media-url";
 import { allergenName, type Lang, UI, pick, formatPrice } from "@/lib/i18n";
+import { formatPortion } from "@/lib/portion";
+import { ProgressiveImage } from "./ProgressiveImage";
 
 const softAccent = "color-mix(in oklab, var(--menu-accent) 14%, transparent)";
 
@@ -10,16 +10,19 @@ export function ItemCard({
   item,
   lang,
   currencyCode,
+  eager = false,
 }: {
   item: MenuItem;
   lang: Lang;
   currencyCode: string;
+  eager?: boolean;
 }) {
   const t = UI[lang];
   const name = pick(item, "name", lang);
   const description = pick(item, "description", lang);
   const sold = !item.isAvailable;
   const featured = item.isFeatured;
+  const portion = formatPortion(item.portionAmount, item.portionUnit);
 
   const cardStyle: CSSProperties = {
     background: "var(--menu-surface)",
@@ -35,16 +38,18 @@ export function ItemCard({
     <article className="relative flex gap-3.5 overflow-hidden p-3.5" style={cardStyle}>
       {item.imageUrl && (
         <div
-          className="relative h-24 w-24 shrink-0 overflow-hidden"
+          className="relative h-24 w-24 shrink-0 overflow-hidden bg-[var(--menu-surface-alt)]"
           style={{ borderRadius: "calc(var(--menu-radius-card) - 6px)" }}
         >
-          <Image
+          <ProgressiveImage
             src={item.imageUrl}
             alt={name}
             fill
             sizes="96px"
+            loading={eager ? "eager" : "lazy"}
+            fetchPriority={eager ? "high" : "auto"}
+            placeholderClassName="bg-[var(--menu-surface-alt)]"
             className="object-cover"
-            unoptimized={isManagedMediaUrl(item.imageUrl)}
           />
         </div>
       )}
@@ -78,8 +83,16 @@ export function ItemCard({
           </p>
         )}
 
-        {(item.allergens.length > 0 || sold) && (
+        {(portion || item.allergens.length > 0 || sold) && (
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {portion && (
+              <span
+                className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+                style={{ background: "var(--menu-surface-alt)", color: "var(--menu-text-muted)" }}
+              >
+                {portion}
+              </span>
+            )}
             {sold && (
               <span
                 className="rounded-full px-2 py-0.5 text-[11px] font-medium"

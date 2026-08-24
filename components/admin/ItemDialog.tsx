@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { LocalizedLanguageSelector } from "@/components/admin/LocalizedLanguageSelector";
+import { LANGS, type Lang } from "@/lib/i18n";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +26,7 @@ import {
 const EMPTY = {
   name: "", nameEn: "", nameAr: "", nameRu: "", nameDe: "", nameFr: "", nameEs: "", nameIt: "", namePl: "", nameZh: "",
   description: "", descriptionEn: "", descriptionAr: "", descriptionRu: "", descriptionDe: "", descriptionFr: "", descriptionEs: "", descriptionIt: "", descriptionPl: "", descriptionZh: "",
-  price: "", imageUrl: "", ingredients: "", portionGrams: "",
+  price: "", imageUrl: "", ingredients: "", portionAmount: "", portionUnit: "G" as "G" | "ML" | "L",
   isNew: false, isFeatured: false, isAvailable: true, hasAlcohol: false, hasPork: false,
   allergenIds: [] as number[],
   energyKcal: "", protein: "", fat: "", saturatedFat: "", carbohydrate: "",
@@ -32,6 +34,9 @@ const EMPTY = {
 };
 
 type FormState = typeof EMPTY;
+
+const NAME_FIELDS = ["name", "nameEn", "nameAr", "nameRu", "nameDe", "nameFr", "nameEs", "nameIt", "namePl", "nameZh"] as const;
+const DESCRIPTION_FIELDS = ["description", "descriptionEn", "descriptionAr", "descriptionRu", "descriptionDe", "descriptionFr", "descriptionEs", "descriptionIt", "descriptionPl", "descriptionZh"] as const;
 
 function numOrNull(s: string): number | null {
   return s.trim() === "" ? null : Number(s);
@@ -43,7 +48,8 @@ function stateFor(editing?: BuilderItem): FormState {
     name: editing.name, nameEn: editing.nameEn, nameAr: editing.nameAr, nameRu: editing.nameRu, nameDe: editing.nameDe, nameFr: editing.nameFr, nameEs: editing.nameEs, nameIt: editing.nameIt, namePl: editing.namePl, nameZh: editing.nameZh,
     description: editing.description, descriptionEn: editing.descriptionEn, descriptionAr: editing.descriptionAr, descriptionRu: editing.descriptionRu, descriptionDe: editing.descriptionDe, descriptionFr: editing.descriptionFr, descriptionEs: editing.descriptionEs, descriptionIt: editing.descriptionIt, descriptionPl: editing.descriptionPl, descriptionZh: editing.descriptionZh,
     price: String(editing.price), imageUrl: editing.imageUrl, ingredients: editing.ingredients,
-    portionGrams: editing.portionGrams?.toString() ?? "",
+    portionAmount: editing.portionAmount?.toString() ?? "",
+    portionUnit: editing.portionUnit ?? "G",
     isNew: editing.isNew, isFeatured: editing.isFeatured, isAvailable: editing.isAvailable,
     hasAlcohol: editing.hasAlcohol, hasPork: editing.hasPork,
     allergenIds: editing.allergenIds,
@@ -80,7 +86,19 @@ export function ItemDialog({
   const { t } = usePanelI18n();
   const [pending, startTransition] = useTransition();
   const [f, setF] = useState<FormState>(() => stateFor(editing));
+  const [activeLanguage, setActiveLanguage] = useState<Lang>("tr");
   const imageFieldRef = useRef<ImageFieldHandle>(null);
+  const activeLanguageIndex = LANGS.indexOf(activeLanguage);
+  const activeNameField = NAME_FIELDS[activeLanguageIndex];
+  const activeDescriptionField = DESCRIPTION_FIELDS[activeLanguageIndex];
+  const filledLanguages = new Set(
+    LANGS.filter((_, index) =>
+      Boolean(
+        f[NAME_FIELDS[index]].trim() ||
+          f[DESCRIPTION_FIELDS[index]].trim(),
+      ),
+    ),
+  );
 
   function set<K extends keyof FormState>(k: K, v: FormState[K]) {
     setF((prev) => ({ ...prev, [k]: v }));
@@ -102,7 +120,8 @@ export function ItemDialog({
         name: f.name, nameEn: f.nameEn, nameAr: f.nameAr, nameRu: f.nameRu, nameDe: f.nameDe, nameFr: f.nameFr, nameEs: f.nameEs, nameIt: f.nameIt, namePl: f.namePl, nameZh: f.nameZh,
         description: f.description, descriptionEn: f.descriptionEn, descriptionAr: f.descriptionAr, descriptionRu: f.descriptionRu, descriptionDe: f.descriptionDe, descriptionFr: f.descriptionFr, descriptionEs: f.descriptionEs, descriptionIt: f.descriptionIt, descriptionPl: f.descriptionPl, descriptionZh: f.descriptionZh,
         price: Number(f.price) || 0,
-        portionGrams: numOrNull(f.portionGrams),
+        portionAmount: numOrNull(f.portionAmount),
+        portionUnit: f.portionAmount.trim() ? f.portionUnit : null,
         imageUrl: f.imageUrl,
         ingredients: f.ingredients,
         isNew: f.isNew, isFeatured: f.isFeatured, isAvailable: f.isAvailable,
@@ -150,30 +169,38 @@ export function ItemDialog({
             label="Photo"
           />
 
-          {/* Names */}
-          <LocalizedFields
-            label="Name"
-            required
-            values={[f.name, f.nameEn, f.nameAr, f.nameRu, f.nameDe, f.nameFr, f.nameEs, f.nameIt, f.namePl, f.nameZh]}
-            onChange={(i, v) => set((["name", "nameEn", "nameAr", "nameRu", "nameDe", "nameFr", "nameEs", "nameIt", "namePl", "nameZh"] as const)[i], v)}
-          />
-
-          <div className="flex flex-col gap-2">
-            <Label>{t("Description")}</Label>
-            <Textarea value={f.description} onChange={(e) => set("description", e.target.value)} placeholder="Türkçe" rows={2} />
-            <Textarea value={f.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} placeholder="English" rows={2} />
-            <Textarea value={f.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} placeholder="العربية" dir="rtl" rows={2} />
-            <Textarea value={f.descriptionRu} onChange={(e) => set("descriptionRu", e.target.value)} placeholder="Русский" rows={2} />
-            <Textarea value={f.descriptionDe} onChange={(e) => set("descriptionDe", e.target.value)} placeholder="Deutsch" rows={2} />
-            <Textarea value={f.descriptionFr} onChange={(e) => set("descriptionFr", e.target.value)} placeholder="Français" rows={2} />
-            <Textarea value={f.descriptionEs} onChange={(e) => set("descriptionEs", e.target.value)} placeholder="Español" rows={2} />
-            <Textarea value={f.descriptionIt} onChange={(e) => set("descriptionIt", e.target.value)} placeholder="Italiano" rows={2} />
-            <Textarea value={f.descriptionPl} onChange={(e) => set("descriptionPl", e.target.value)} placeholder="Polski" rows={2} />
-            <Textarea value={f.descriptionZh} onChange={(e) => set("descriptionZh", e.target.value)} placeholder="简体中文" rows={2} />
+          <div className="flex flex-col gap-3 rounded-lg border p-3">
+            <LocalizedLanguageSelector
+              activeLanguage={activeLanguage}
+              filledLanguages={filledLanguages}
+              onChange={setActiveLanguage}
+            />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`item-name-${activeLanguage}`}>{t("Name")}</Label>
+              <Input
+                key={`name-${activeLanguage}`}
+                id={`item-name-${activeLanguage}`}
+                value={f[activeNameField]}
+                dir={activeLanguage === "ar" ? "rtl" : "ltr"}
+                required={activeLanguage === "tr"}
+                onChange={(event) => set(activeNameField, event.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={`item-description-${activeLanguage}`}>{t("Description")}</Label>
+              <Textarea
+                key={`description-${activeLanguage}`}
+                id={`item-description-${activeLanguage}`}
+                value={f[activeDescriptionField]}
+                dir={activeLanguage === "ar" ? "rtl" : "ltr"}
+                rows={2}
+                onChange={(event) => set(activeDescriptionField, event.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-[1fr_5rem] gap-4 sm:grid-cols-[1fr_1fr_6rem]">
+            <div className="col-span-2 flex flex-col gap-2 sm:col-span-1">
               <Label htmlFor="price">{t("Price (₺)")}</Label>
               <Input
                 id="price"
@@ -184,13 +211,30 @@ export function ItemDialog({
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="portionGrams">{t("Portion (g)")}</Label>
+              <Label htmlFor="portionAmount">{t("Portion")}</Label>
               <Input
-                id="portionGrams"
-                inputMode="numeric"
-                value={f.portionGrams}
-                onChange={(e) => set("portionGrams", e.target.value.replace(/[^0-9]/g, ""))}
+                id="portionAmount"
+                type="number"
+                inputMode="decimal"
+                min="0.01"
+                max="100000"
+                step="any"
+                value={f.portionAmount}
+                onChange={(e) => set("portionAmount", e.target.value)}
               />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="portionUnit">{t("Unit")}</Label>
+              <select
+                id="portionUnit"
+                value={f.portionUnit}
+                onChange={(e) => set("portionUnit", e.target.value as FormState["portionUnit"])}
+                className="h-9 rounded-md border bg-background px-3 text-sm"
+              >
+                <option value="G">g</option>
+                <option value="ML">ml</option>
+                <option value="L">L</option>
+              </select>
             </div>
           </div>
 
@@ -278,37 +322,6 @@ export function ItemDialog({
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function LocalizedFields({
-  label,
-  required,
-  values,
-  onChange,
-}: {
-  label: string;
-  required?: boolean;
-  values: string[];
-  onChange: (i: number, v: string) => void;
-}) {
-  const ph = ["Türkçe", "English", "العربية", "Русский", "Deutsch", "Français", "Español", "Italiano", "Polski", "简体中文"];
-  return (
-    <div className="flex flex-col gap-2">
-      <Label>
-        {label} {required && <span className="text-destructive">*</span>}
-      </Label>
-      {values.map((v, i) => (
-        <Input
-          key={i}
-          value={v}
-          placeholder={ph[i]}
-          dir={i === 2 ? "rtl" : "ltr"}
-          required={required && i === 0}
-          onChange={(e) => onChange(i, e.target.value)}
-        />
-      ))}
-    </div>
   );
 }
 

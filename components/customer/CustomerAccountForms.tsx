@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
 
-const initialManagement = { error: null, activationPath: null };
+const initialManagement = { error: null, activationPath: null, message: null };
 
 export function ChangePasswordForm() {
   const { t } = usePanelI18n();
@@ -45,8 +45,8 @@ export function InviteStaffForm({
   const router = useRouter();
   const [state, action, pending] = useActionState(inviteCustomerStaff, initialManagement);
   useEffect(() => {
-    if (state.activationPath) router.refresh();
-  }, [router, state.activationPath]);
+    if (state.activationPath || state.message) router.refresh();
+  }, [router, state.activationPath, state.message]);
   return (
     <Card>
       <CardHeader><CardTitle className="text-base">{t("Invite restaurant staff")}</CardTitle></CardHeader>
@@ -68,6 +68,7 @@ export function InviteStaffForm({
             </select>
           </div>
           {state.error && <p className="text-sm text-destructive">{state.error}</p>}
+          {state.message && <p className="text-sm text-emerald-700">{t(state.message)}</p>}
           {state.activationPath && (
             <div className="space-y-3 rounded-md border bg-muted p-3 text-sm">
               <p>{t("Share this one-time activation link:")}</p>

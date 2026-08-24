@@ -24,7 +24,8 @@ export interface BuilderItem {
   descriptionPl: string;
   descriptionZh: string;
   price: number;
-  portionGrams: number | null;
+  portionAmount: number | null;
+  portionUnit: "G" | "ML" | "L" | null;
   imageUrl: string;
   ingredients: string;
   isNew: boolean;
@@ -91,7 +92,8 @@ type RawItem = {
   descriptionPl: string | null;
   descriptionZh: string | null;
   price: number;
-  portionGrams: number | null;
+  portionAmount: number | null;
+  portionUnit: "G" | "ML" | "L" | null;
   imageUrl: string | null;
   ingredients: string | null;
   isNew: boolean;
@@ -154,7 +156,8 @@ export function toBuilderItem(it: RawItem): BuilderItem {
     descriptionPl: it.descriptionPl ?? "",
     descriptionZh: it.descriptionZh ?? "",
     price: it.price,
-    portionGrams: it.portionGrams,
+    portionAmount: it.portionAmount,
+    portionUnit: it.portionUnit,
     imageUrl: it.imageUrl ?? "",
     ingredients: it.ingredients ?? "",
     isNew: it.isNew,

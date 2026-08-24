@@ -91,7 +91,8 @@ async function main() {
           items: {
             create: category.items.map(([name, nameEn, nameAr, description, price], itemIndex) => ({
               name, nameEn, nameAr, description, price, sortOrder: itemIndex,
-              portionGrams: itemIndex === 0 ? 250 : null,
+              portionAmount: itemIndex === 0 ? 250 : null,
+              portionUnit: itemIndex === 0 ? "G" : null,
             })),
           },
         })),

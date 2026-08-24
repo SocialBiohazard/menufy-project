@@ -1,18 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 import {
   ArrowLeft,
   ChevronRight,
   Clock3,
 } from "lucide-react";
 import type { MenuData, MenuItem } from "@/lib/menu";
-import { isManagedMediaUrl } from "@/lib/media-url";
 import { allergenName, formatPrice, isRtl, LANG_LABELS, pick, type Lang } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { RestaurantFooter } from "@/components/menu/RestaurantFooter";
 import { themeToCssVars, type ThemeTokens } from "@/lib/themes";
+import { ProgressiveImage } from "@/components/menu/ProgressiveImage";
+import { formatPortion } from "@/lib/portion";
 import {
   readInciNavigation,
   writeInciNavigation,
@@ -180,6 +181,7 @@ export function InciHeritageMenu({
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const contentHeadingRef = useRef<HTMLHeadingElement>(null);
+  const prefetchedImagesRef = useRef<HTMLImageElement[]>([]);
   const rtl = isRtl(lang);
   const t = COPY[lang];
   const themeStyle = themeToCssVars(theme);
@@ -278,6 +280,33 @@ export function InciHeritageMenu({
     if (entered) contentHeadingRef.current?.focus({ preventScroll: true });
   }, [categoryId, entered]);
 
+  useEffect(() => {
+    if (entered || !menu.splashEnabled) return;
+
+    const sources = categories
+      .map((entry) => entry.imageUrl || entry.items.find((item) => item.imageUrl)?.imageUrl)
+      .filter((source): source is string => Boolean(source));
+
+    prefetchedImagesRef.current = sources.map((source) => {
+      const { props } = getImageProps({
+        src: source,
+        alt: "",
+        fill: true,
+        sizes: "(max-width: 640px) 50vw, 33vw",
+      });
+      const image = new window.Image();
+      image.decoding = "async";
+      image.sizes = props.sizes ?? "(max-width: 640px) 50vw, 33vw";
+      image.srcset = props.srcSet ?? "";
+      image.src = props.src;
+      return image;
+    });
+
+    return () => {
+      prefetchedImagesRef.current = [];
+    };
+  }, [categories, entered, menu.splashEnabled]);
+
   if (!entered) {
     return (
       <div
@@ -300,9 +329,8 @@ export function InciHeritageMenu({
                 alt={menu.businessName}
                 width={152}
                 height={152}
-                priority
+                loading="eager"
                 className="size-28 rounded-full object-contain sm:size-36"
-                unoptimized={isManagedMediaUrl(logo)}
               />
             ) : (
               <span className="font-display text-4xl font-semibold">{businessInitials(menu.businessName)}</span>
@@ -352,8 +380,8 @@ export function InciHeritageMenu({
                     alt=""
                     width={60}
                     height={60}
+                    loading="eager"
                     className="size-14 rounded-full object-contain"
-                    unoptimized={isManagedMediaUrl(logo)}
                   />
                 ) : (
                   <span className="font-display text-lg font-semibold">{businessInitials(menu.businessName)}</span>
@@ -424,7 +452,16 @@ export function InciHeritageMenu({
 function Background({ image, subtle = false }: { image: string; subtle?: boolean }) {
   return (
     <>
-      <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${JSON.stringify(image)})` }} />
+      <ProgressiveImage
+        src={image}
+        alt=""
+        fill
+        preload
+        quality={60}
+        sizes="100vw"
+        placeholderClassName="bg-[#421017]"
+        className="object-cover object-center"
+      />
       <div className={`absolute inset-0 ${subtle ? "bg-[#4d111b]/80" : "bg-[linear-gradient(180deg,rgba(48,8,14,.34),rgba(48,8,14,.77))]"}`} />
     </>
   );
@@ -493,13 +530,15 @@ function CategoryGrid({
             className="group relative min-h-48 overflow-hidden rounded-[1.4rem] bg-[#681a27] text-start shadow-[0_18px_50px_-30px_rgba(69,13,22,.8)] transition hover:-translate-y-1 hover:shadow-[0_24px_55px_-28px_rgba(69,13,22,.9)] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#882634] motion-reduce:transform-none sm:min-h-72"
           >
             {image ? (
-              <Image
+              <ProgressiveImage
                 src={image}
                 alt=""
                 fill
                 sizes="(max-width: 640px) 50vw, 33vw"
+                loading="eager"
+                fetchPriority={index < 4 ? "high" : "auto"}
+                placeholderClassName="bg-[#681a27]"
                 className="object-cover transition duration-700 group-hover:scale-[1.03] motion-reduce:transform-none motion-reduce:transition-none"
-                unoptimized={isManagedMediaUrl(image)}
               />
             ) : (
               <div className="absolute inset-0" style={{ background: CATEGORY_FALLBACKS[index % CATEGORY_FALLBACKS.length] }}>
@@ -542,6 +581,33 @@ function CategoryView({
   onItem: (item: MenuItem) => void;
 }) {
   const t = COPY[lang];
+  const detailImagePreloadsRef = useRef<HTMLImageElement[]>([]);
+
+  useEffect(() => {
+    detailImagePreloadsRef.current = category.items.flatMap((item, index) => {
+      if (!item.imageUrl) return [];
+
+      const { props } = getImageProps({
+        src: item.imageUrl,
+        alt: "",
+        fill: true,
+        quality: 75,
+        sizes: "(max-width: 640px) 100vw, 576px",
+      });
+      const image = new window.Image();
+      image.decoding = "async";
+      image.fetchPriority = index < 4 ? "high" : "low";
+      image.sizes = props.sizes ?? "(max-width: 640px) 100vw, 576px";
+      image.srcset = props.srcSet ?? "";
+      image.src = props.src;
+      return [image];
+    });
+
+    return () => {
+      detailImagePreloadsRef.current = [];
+    };
+  }, [category.items]);
+
   return (
     <div>
       <button onClick={onBack} className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-[#882634] shadow-sm transition hover:bg-[#fffaf0]">
@@ -552,7 +618,7 @@ function CategoryView({
         <p className="rounded-3xl bg-white p-8 text-center text-[#6e5b58] shadow-sm">{t.empty}</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-          {category.items.map((item) => (
+          {category.items.map((item, index) => (
             <button
               key={item.id}
               onClick={() => onItem(item)}
@@ -560,14 +626,16 @@ function CategoryView({
               disabled={!item.isAvailable}
             >
               {item.imageUrl ? (
-                <div className="relative w-32 shrink-0 overflow-hidden sm:w-36">
-                  <Image
+                <div className="relative w-32 shrink-0 overflow-hidden bg-[#eadfce] sm:w-36">
+                  <ProgressiveImage
                     src={item.imageUrl}
                     alt=""
                     fill
                     sizes="144px"
+                    loading="eager"
+                    fetchPriority={index < 4 ? "high" : "auto"}
+                    placeholderClassName="bg-[#eadfce]"
                     className="object-cover transition duration-500 group-hover:scale-105 motion-reduce:transform-none motion-reduce:transition-none"
-                    unoptimized={isManagedMediaUrl(item.imageUrl)}
                   />
                 </div>
               ) : (
@@ -629,6 +697,7 @@ function ItemDetails({
   ].filter((entry) => entry[1] != null) : [], [nutrition]);
   const allergenNotice = pick(menu, "allergenNotice", lang);
   const nutritionNotice = pick(menu, "nutritionNotice", lang);
+  const portion = formatPortion(item?.portionAmount, item?.portionUnit);
 
   return (
     <Dialog open={Boolean(item)} onOpenChange={(open) => !open && onClose()}>
@@ -641,9 +710,20 @@ function ItemDetails({
                   src={item.imageUrl}
                   alt=""
                   fill
-                  sizes="576px"
+                  sizes="144px"
+                  quality={75}
+                  loading="eager"
                   className="object-cover"
-                  unoptimized={isManagedMediaUrl(item.imageUrl)}
+                />
+                <ProgressiveImage
+                  src={item.imageUrl}
+                  alt=""
+                  fill
+                  sizes="(max-width: 640px) 100vw, 576px"
+                  loading="eager"
+                  fetchPriority="high"
+                  placeholderClassName="bg-transparent"
+                  className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#3d0c14]/55 to-transparent" />
               </div>
@@ -657,7 +737,7 @@ function ItemDetails({
                 <p className="shrink-0 text-xl font-bold text-[#882634]">{formatPrice(item.price, menu.currencyCode, lang)}</p>
               </div>
               {pick(item, "description", lang) && <p className="mt-4 leading-7 text-[#65514e]">{pick(item, "description", lang)}</p>}
-              {item.portionGrams && <DetailLine label={t.portion} value={`${item.portionGrams} g`} />}
+              {portion && <DetailLine label={t.portion} value={portion} />}
               {item.ingredients && <DetailLine label={t.ingredients} value={item.ingredients} />}
               {item.allergens.length > 0 && (
                 <section className="mt-6 border-t border-[#882634]/12 pt-5">

@@ -20,6 +20,12 @@ enum NavigationStyle {
   ACCORDION
 }
 
+enum PortionUnit {
+  G
+  ML
+  L
+}
+
 enum CustomerRole {
   OWNER
   EDITOR
@@ -45,62 +51,62 @@ model Restaurant {
   businessType String?
 
   // --- Phase 1.5 queue: nullable, not built into MVP UI yet ---
-  phone            String?
-  email            String?
-  whatsappNumber   String?
-  websiteUrl       String?
-  address          String?
-  city             String?
-  district         String?
-  workingHours     Json?
-  timezone         String  @default("Europe/Istanbul")
-  instagramUrl     String?
-  facebookUrl      String?
-  tiktokUrl        String?
-  xUrl             String?
-  youtubeUrl       String?
-  googleMapsUrl    String?
-  googleReviewsUrl String?
-  kdvNotice        String?
-  kdvNoticeEn      String?
-  kdvNoticeAr      String?
-  kdvNoticeRu      String?
-  kdvNoticeDe      String?
-  kdvNoticeFr      String?
-  kdvNoticeEs      String?
-  kdvNoticeIt      String?
-  kdvNoticePl      String?
-  kdvNoticeZh      String?
-  allergenNotice   String?
-  allergenNoticeEn String?
-  allergenNoticeAr String?
-  allergenNoticeRu String?
-  allergenNoticeDe String?
-  allergenNoticeFr String?
-  allergenNoticeEs String?
-  allergenNoticeIt String?
-  allergenNoticePl String?
-  allergenNoticeZh String?
-  nutritionNotice   String?
-  nutritionNoticeEn String?
-  nutritionNoticeAr String?
-  nutritionNoticeRu String?
-  nutritionNoticeDe String?
-  nutritionNoticeFr String?
-  nutritionNoticeEs String?
-  nutritionNoticeIt String?
-  nutritionNoticePl String?
-  nutritionNoticeZh String?
-  slogan           String?
-  sloganEn         String?
-  sloganAr         String?
-  sloganRu         String?
-  sloganDe         String?
-  sloganFr         String?
-  sloganEs         String?
-  sloganIt         String?
-  sloganPl         String?
-  sloganZh         String?
+  phone               String?
+  email               String?
+  whatsappNumber      String?
+  websiteUrl          String?
+  address             String?
+  city                String?
+  district            String?
+  workingHours        Json?
+  timezone            String  @default("Europe/Istanbul")
+  instagramUrl        String?
+  facebookUrl         String?
+  tiktokUrl           String?
+  xUrl                String?
+  youtubeUrl          String?
+  googleMapsUrl       String?
+  googleReviewsUrl    String?
+  kdvNotice           String?
+  kdvNoticeEn         String?
+  kdvNoticeAr         String?
+  kdvNoticeRu         String?
+  kdvNoticeDe         String?
+  kdvNoticeFr         String?
+  kdvNoticeEs         String?
+  kdvNoticeIt         String?
+  kdvNoticePl         String?
+  kdvNoticeZh         String?
+  allergenNotice      String?
+  allergenNoticeEn    String?
+  allergenNoticeAr    String?
+  allergenNoticeRu    String?
+  allergenNoticeDe    String?
+  allergenNoticeFr    String?
+  allergenNoticeEs    String?
+  allergenNoticeIt    String?
+  allergenNoticePl    String?
+  allergenNoticeZh    String?
+  nutritionNotice     String?
+  nutritionNoticeEn   String?
+  nutritionNoticeAr   String?
+  nutritionNoticeRu   String?
+  nutritionNoticeDe   String?
+  nutritionNoticeFr   String?
+  nutritionNoticeEs   String?
+  nutritionNoticeIt   String?
+  nutritionNoticePl   String?
+  nutritionNoticeZh   String?
+  slogan              String?
+  sloganEn            String?
+  sloganAr            String?
+  sloganRu            String?
+  sloganDe            String?
+  sloganFr            String?
+  sloganEs            String?
+  sloganIt            String?
+  sloganPl            String?
+  sloganZh            String?
   footerDescription   String?
   footerDescriptionEn String?
   footerDescriptionAr String?
@@ -113,20 +119,20 @@ model Restaurant {
   footerDescriptionZh String?
   footerCopyright     String?
   footerVisibility    Json?
-  establishedYear  Int?
-  currencyCode     String @default("TRY")
-  attributionText  String?
-  attributionUrl   String?
+  establishedYear     Int?
+  currencyCode        String  @default("TRY")
+  attributionText     String?
+  attributionUrl      String?
   // ------------------------------------------------------------
 
-  logo       String?
-  coverImage String?
+  logo          String?
+  coverImage    String?
   splashImage   String?
   splashEnabled Boolean @default(false)
 
   // Optional custom host such as menu.example.com. The application still
   // keeps /[slug] available as an operator preview/fallback URL.
-  publicHostname String? @unique
+  publicHostname    String?   @unique
   lastPriceChangeAt DateTime?
 
   templateType String // key into the code-level template registry
@@ -145,20 +151,20 @@ model Restaurant {
   defaultLang  String   @default("tr")
   enabledLangs String[] @default(["tr", "en", "ar"])
 
-  isPublished Boolean  @default(false)
+  isPublished       Boolean   @default(false)
   publishedSnapshot Json?
-  publishedAt DateTime?
-  draftUpdatedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  publishedAt       DateTime?
+  draftUpdatedAt    DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  customerAccountId String?
-  customerAccount CustomerAccount? @relation(fields: [customerAccountId], references: [id], onDelete: SetNull)
-  categories    Category[]
-  menuSchedules MenuSchedule[]
+  customerAccountId   String?
+  customerAccount     CustomerAccount?       @relation(fields: [customerAccountId], references: [id], onDelete: SetNull)
+  categories          Category[]
+  menuSchedules       MenuSchedule[]
   customerMemberships RestaurantMembership[]
-  auditLogs AuditLog[]
-  notifications Notification[]
+  auditLogs           AuditLog[]
+  notifications       Notification[]
 
   @@index([customerAccountId])
 }
@@ -171,7 +177,7 @@ model Operator {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  sessions OperatorSession[]
+  sessions      OperatorSession[]
   notifications Notification[]
 }
 
@@ -203,20 +209,20 @@ model CustomerAccount {
 }
 
 model CustomerUser {
-  id           String   @id @default(cuid())
+  id           String          @id @default(cuid())
   accountId    String
   account      CustomerAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  email        String   @unique
+  email        String          @unique
   name         String?
   passwordHash String
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
-  sessions       CustomerSession[]
-  memberships    RestaurantMembership[]
-  notifications  Notification[]
-  sentInvitations CustomerInvitation[] @relation("CustomerInviter")
+  sessions        CustomerSession[]
+  memberships     RestaurantMembership[]
+  notifications   Notification[]
+  sentInvitations CustomerInvitation[]   @relation("CustomerInviter")
 
   @@index([accountId])
 }
@@ -247,35 +253,35 @@ model RestaurantMembership {
 }
 
 model CustomerInvitation {
-  id                      String       @id @default(cuid())
-  tokenHash               String       @unique
+  id                      String          @id @default(cuid())
+  tokenHash               String          @unique
   email                   String
   role                    CustomerRole
   restaurantIds           String[]
   customerAccountId       String
   customerAccount         CustomerAccount @relation(fields: [customerAccountId], references: [id], onDelete: Cascade)
   invitedByCustomerUserId String?
-  invitedByCustomerUser   CustomerUser? @relation("CustomerInviter", fields: [invitedByCustomerUserId], references: [id], onDelete: SetNull)
+  invitedByCustomerUser   CustomerUser?   @relation("CustomerInviter", fields: [invitedByCustomerUserId], references: [id], onDelete: SetNull)
   expiresAt               DateTime
   acceptedAt              DateTime?
-  createdAt               DateTime     @default(now())
+  createdAt               DateTime        @default(now())
 
   @@index([customerAccountId])
   @@index([email])
 }
 
 model AuditLog {
-  id          String         @id @default(cuid())
+  id           String         @id @default(cuid())
   restaurantId String?
-  restaurant  Restaurant?    @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
-  actorType   AuditActorType
-  actorId     String?
-  actorEmail  String?
-  action      String
-  entityType  String
-  entityId    String?
-  changes     Json?
-  createdAt   DateTime       @default(now())
+  restaurant   Restaurant?    @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  actorType    AuditActorType
+  actorId      String?
+  actorEmail   String?
+  action       String
+  entityType   String
+  entityId     String?
+  changes      Json?
+  createdAt    DateTime       @default(now())
 
   @@index([restaurantId, createdAt])
 }
@@ -349,10 +355,11 @@ model Item {
   descriptionPl String?
   descriptionZh String?
 
-  price       Int // whole currency units (reference stores TRY as whole lira)
-  portionGrams Int?
-  imageUrl    String?
-  ingredients String? // TR only, freeform
+  price         Int // whole currency units (reference stores TRY as whole lira)
+  portionAmount Float?
+  portionUnit   PortionUnit?
+  imageUrl      String?
+  ingredients   String? // TR only, freeform
 
   isNew       Boolean @default(false)
   isFeatured  Boolean @default(false)
@@ -427,7 +434,7 @@ model Variant {
   labelPl   String?
   labelZh   String?
   price     Int
-  sortOrder Int    @default(0)
+  sortOrder Int     @default(0)
 
   @@index([itemId])
 }

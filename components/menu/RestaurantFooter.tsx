@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import type { MenuData } from "@/lib/menu";
 import { pick, type Lang } from "@/lib/i18n";
-import { isManagedMediaUrl } from "@/lib/media-url";
 import {
   callablePhone,
   defaultCopyright,
@@ -179,7 +178,6 @@ export function RestaurantFooter({
                     width={56}
                     height={56}
                     className={isInci ? "size-14 rounded-full border border-[#e7c784]/40 object-cover" : "size-14 rounded-full object-cover"}
-                    unoptimized={isManagedMediaUrl(menu.logo)}
                   />
                 )}
                 <p className={isInci ? "font-display text-2xl font-semibold" : "font-display text-xl font-semibold text-[var(--menu-primary)]"}>

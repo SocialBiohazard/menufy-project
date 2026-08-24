@@ -12,10 +12,18 @@ const MIME_FORMAT = {
 
 const MAX_EDGE_BY_KIND: Record<string, number> = {
   logo: 1200,
-  items: 1600,
-  categories: 1600,
-  cover: 2400,
-  splash: 2400,
+  items: 1200,
+  categories: 1200,
+  cover: 1600,
+  splash: 1600,
+};
+
+const QUALITY_BY_KIND: Record<string, number> = {
+  logo: 88,
+  items: 78,
+  categories: 78,
+  cover: 68,
+  splash: 68,
 };
 
 export class InvalidImageError extends Error {}
@@ -61,7 +69,7 @@ export async function optimizeImage(
         withoutEnlargement: true,
       })
       .webp({
-        quality: kind === "logo" ? 88 : 82,
+        quality: QUALITY_BY_KIND[kind] ?? 78,
         effort: 4,
         smartSubsample: true,
       })

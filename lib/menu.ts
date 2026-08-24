@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
+import { cache } from "react";
 
 // The full shape a diner page needs: restaurant + ordered categories, each with
 // ordered items, each with allergens (+ the allergen lookup) and nutrition.
@@ -101,22 +102,22 @@ export async function publishedSnapshotFor(
 }
 
 /** Published restaurant by slug, with its whole menu. `null` if missing/unpublished. */
-export async function getPublishedRestaurant(slug: string): Promise<MenuData | null> {
+export const getPublishedRestaurant = cache(async (slug: string): Promise<MenuData | null> => {
   const restaurant = await prisma.restaurant.findFirst({
     where: { slug, isPublished: true },
     select: { id: true, publishedSnapshot: true, ...liveFooterSelect },
   });
   if (!restaurant) return null;
   return dinerMenu(withLiveFooter(hydrateSnapshot(restaurant.publishedSnapshot), restaurant));
-}
+});
 
 /** Development-only visual fixture lookup. Callers must enforce the env guard. */
-export async function getRestaurantForVisualPreview(slug: string): Promise<MenuData | null> {
+export const getRestaurantForVisualPreview = cache(async (slug: string): Promise<MenuData | null> => {
   return prisma.restaurant.findUnique({
     where: { slug },
     include: menuInclude,
   });
-}
+});
 
 /** Published restaurant mapped to an exact custom hostname. */
 export async function getPublishedRestaurantByHostname(hostname: string): Promise<MenuData | null> {

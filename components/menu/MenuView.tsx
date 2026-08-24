@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { ChevronDown } from "lucide-react";
 import type { MenuData } from "@/lib/menu";
-import { isManagedMediaUrl } from "@/lib/media-url";
 import { type Lang, LANG_LABELS, UI, isRtl, pick } from "@/lib/i18n";
 import { type ThemeTokens, themeToCssVars } from "@/lib/themes";
 import { ItemCard } from "./ItemCard";
 import { RestaurantFooter } from "./RestaurantFooter";
+import { ProgressiveImage } from "./ProgressiveImage";
 
 interface Props {
   menu: MenuData;
@@ -50,11 +49,11 @@ export function MenuView({ menu, theme, enabledLangs, defaultLang }: Props) {
           )}
 
           {accordion
-            ? nonEmpty.map((c) => (
-                <AccordionSection key={c.id} category={c} lang={lang} currencyCode={menu.currencyCode} />
+            ? nonEmpty.map((c, index) => (
+                <AccordionSection key={c.id} category={c} lang={lang} currencyCode={menu.currencyCode} eagerImages={index === 0} />
               ))
-            : nonEmpty.map((c) => (
-                <StackedSection key={c.id} category={c} lang={lang} currencyCode={menu.currencyCode} />
+            : nonEmpty.map((c, index) => (
+                <StackedSection key={c.id} category={c} lang={lang} currencyCode={menu.currencyCode} eagerImages={index === 0} />
               ))}
         </main>
 
@@ -79,18 +78,19 @@ function Hero({
   const slogan = pick(menu, "slogan", lang);
   return (
     <header
-      className="relative flex w-full items-end overflow-hidden"
+      className="relative flex w-full items-end overflow-hidden bg-[var(--menu-primary)]"
       style={{ height: "var(--menu-hero-height)" }}
     >
       {menu.coverImage ? (
-        <Image
+        <ProgressiveImage
           src={menu.coverImage}
           alt=""
           fill
-          priority
+          preload
+          quality={60}
           sizes="100vw"
+          placeholderClassName="bg-[var(--menu-primary)]"
           className="object-cover"
-          unoptimized={isManagedMediaUrl(menu.coverImage)}
         />
       ) : (
         <div
@@ -121,14 +121,15 @@ function Hero({
 
       <div className="relative z-10 w-full px-5 pb-7">
         {menu.logo && (
-          <div className="mb-3.5 h-[72px] w-[72px] overflow-hidden rounded-full bg-white/10 shadow-lg ring-2 ring-white/85">
-            <Image
+          <div className="mb-3.5 h-[72px] w-[72px] overflow-hidden rounded-full bg-white/15 shadow-lg ring-2 ring-white/85">
+            <ProgressiveImage
               src={menu.logo}
               alt={menu.businessName}
               width={72}
               height={72}
+              loading="eager"
+              placeholderClassName="bg-white/15"
               className="h-full w-full object-cover"
-              unoptimized={isManagedMediaUrl(menu.logo)}
             />
           </div>
         )}
@@ -223,17 +224,19 @@ function StackedSection({
   category,
   lang,
   currencyCode,
+  eagerImages,
 }: {
   category: MenuData["categories"][number];
   lang: Lang;
   currencyCode: string;
+  eagerImages: boolean;
 }) {
   return (
     <section id={`cat-${category.id}`} className="scroll-mt-16 pt-7 first:pt-1">
       <SectionHeading title={pick(category, "name", lang)} />
       <div className="flex flex-col gap-3">
-        {category.items.map((item) => (
-          <ItemCard key={item.id} item={item} lang={lang} currencyCode={currencyCode} />
+        {category.items.map((item, index) => (
+          <ItemCard key={item.id} item={item} lang={lang} currencyCode={currencyCode} eager={eagerImages && index < 4} />
         ))}
       </div>
     </section>
@@ -244,10 +247,12 @@ function AccordionSection({
   category,
   lang,
   currencyCode,
+  eagerImages,
 }: {
   category: MenuData["categories"][number];
   lang: Lang;
   currencyCode: string;
+  eagerImages: boolean;
 }) {
   const [open, setOpen] = useState(true);
   return (
@@ -268,8 +273,8 @@ function AccordionSection({
       </button>
       {open && (
         <div className="mt-4 flex flex-col gap-3">
-          {category.items.map((item) => (
-            <ItemCard key={item.id} item={item} lang={lang} currencyCode={currencyCode} />
+          {category.items.map((item, index) => (
+            <ItemCard key={item.id} item={item} lang={lang} currencyCode={currencyCode} eager={eagerImages && index < 4} />
           ))}
         </div>
       )}

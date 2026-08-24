@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePanelI18n } from "@/components/shared/PanelI18nProvider";
+import { LocalizedLanguageSelector } from "@/components/admin/LocalizedLanguageSelector";
+import { LANGS, type Lang } from "@/lib/i18n";
 import {
   Dialog,
   DialogContent,
@@ -59,8 +61,24 @@ export function CategoryDialog({
   const [nameIt, setNameIt] = useState(editing?.nameIt ?? "");
   const [namePl, setNamePl] = useState(editing?.namePl ?? "");
   const [nameZh, setNameZh] = useState(editing?.nameZh ?? "");
+  const [activeLanguage, setActiveLanguage] = useState<Lang>("tr");
   const [imageUrl, setImageUrl] = useState(editing?.imageUrl ?? "");
   const imageFieldRef = useRef<ImageFieldHandle>(null);
+  const localizedNames = {
+    tr: { value: name, setValue: setName },
+    en: { value: nameEn, setValue: setNameEn },
+    ar: { value: nameAr, setValue: setNameAr },
+    ru: { value: nameRu, setValue: setNameRu },
+    de: { value: nameDe, setValue: setNameDe },
+    fr: { value: nameFr, setValue: setNameFr },
+    es: { value: nameEs, setValue: setNameEs },
+    it: { value: nameIt, setValue: setNameIt },
+    pl: { value: namePl, setValue: setNamePl },
+    zh: { value: nameZh, setValue: setNameZh },
+  } satisfies Record<Lang, { value: string; setValue: (value: string) => void }>;
+  const filledLanguages = new Set(
+    LANGS.filter((language) => localizedNames[language].value.trim()),
+  );
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,41 +113,24 @@ export function CategoryDialog({
             kind="categories"
             label="Category image"
           />
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="cat-name">Name (Türkçe)</Label>
+          <div className="flex flex-col gap-3 rounded-lg border p-3">
+            <LocalizedLanguageSelector
+              activeLanguage={activeLanguage}
+              filledLanguages={filledLanguages}
+              onChange={setActiveLanguage}
+            />
+            <Label htmlFor={`cat-name-${activeLanguage}`}>{t("Name")}</Label>
             <Input
-              id="cat-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              autoFocus
+              key={activeLanguage}
+              id={`cat-name-${activeLanguage}`}
+              value={localizedNames[activeLanguage].value}
+              onChange={(event) =>
+                localizedNames[activeLanguage].setValue(event.target.value)
+              }
+              dir={activeLanguage === "ar" ? "rtl" : "ltr"}
+              required={activeLanguage === "tr"}
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="cat-en">Name (English)</Label>
-            <Input id="cat-en" value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="cat-ar">Name (العربية)</Label>
-            <Input id="cat-ar" value={nameAr} onChange={(e) => setNameAr(e.target.value)} dir="rtl" />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="cat-ru">Name (Русский)</Label>
-            <Input id="cat-ru" value={nameRu} onChange={(e) => setNameRu(e.target.value)} />
-          </div>
-          {([
-            ["de", "Deutsch", nameDe, setNameDe],
-            ["fr", "Français", nameFr, setNameFr],
-            ["es", "Español", nameEs, setNameEs],
-            ["it", "Italiano", nameIt, setNameIt],
-            ["pl", "Polski", namePl, setNamePl],
-            ["zh", "简体中文", nameZh, setNameZh],
-          ] as const).map(([code, label, value, setter]) => (
-            <div key={code} className="flex flex-col gap-2">
-              <Label htmlFor={`cat-${code}`}>Name ({label})</Label>
-              <Input id={`cat-${code}`} value={value} onChange={(e) => setter(e.target.value)} />
-            </div>
-          ))}
           <DialogFooter>
             <Button type="submit" disabled={pending || !name}>
               {pending ? t("Saving…") : t("Save")}

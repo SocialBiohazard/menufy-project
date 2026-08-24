@@ -5,11 +5,13 @@ import { z } from "zod";
 import { requireOperator } from "@/lib/auth";
 import { requireCustomerUser } from "@/lib/customer-auth";
 import { generateInvitationToken } from "@/lib/actions/customer-auth";
+import { invitationRecipientMode } from "@/lib/customer-invitation-policy";
 import { prisma } from "@/lib/prisma";
 
 export type CustomerManagementState = {
   error: string | null;
   activationPath: string | null;
+  message?: string | null;
 };
 
 export type CustomerOperationResult =
@@ -105,6 +107,117 @@ const inviteSchema = z.object({
   restaurantId: z.string().min(1),
 });
 
+const operatorInviteSchema = inviteSchema.extend({
+  accountId: z.string().min(1),
+});
+
+export async function inviteCustomerUserAsOperator(
+  _state: CustomerManagementState,
+  formData: FormData,
+): Promise<CustomerManagementState> {
+  await requireOperator();
+  const parsed = operatorInviteSchema.safeParse({
+    accountId: formData.get("accountId"),
+    email: formData.get("email"),
+    role: formData.get("role"),
+    restaurantId: formData.get("restaurantId"),
+  });
+  if (!parsed.success) {
+    return { error: "Enter a valid email, role, and restaurant", activationPath: null };
+  }
+
+  const email = parsed.data.email.trim().toLowerCase();
+  const [restaurant, existingUser] = await Promise.all([
+    prisma.restaurant.findUnique({
+      where: { id: parsed.data.restaurantId },
+      select: { customerAccountId: true },
+    }),
+    prisma.customerUser.findUnique({
+      where: { email },
+      select: { id: true, accountId: true, isActive: true },
+    }),
+  ]);
+  if (restaurant?.customerAccountId !== parsed.data.accountId) {
+    return { error: "That restaurant does not belong to this customer workspace", activationPath: null };
+  }
+
+  const recipientMode = invitationRecipientMode(
+    existingUser?.accountId,
+    parsed.data.accountId,
+  );
+  if (recipientMode === "REJECT_OTHER_WORKSPACE") {
+    return { error: "That email belongs to another customer workspace", activationPath: null };
+  }
+  if (recipientMode === "GRANT_ACCESS" && existingUser) {
+    if (!existingUser.isActive) {
+      return { error: "That user is suspended. Reactivate the account first.", activationPath: null };
+    }
+    await prisma.$transaction([
+      prisma.restaurantMembership.upsert({
+        where: {
+          customerUserId_restaurantId: {
+            customerUserId: existingUser.id,
+            restaurantId: parsed.data.restaurantId,
+          },
+        },
+        create: {
+          customerUserId: existingUser.id,
+          restaurantId: parsed.data.restaurantId,
+          role: parsed.data.role,
+        },
+        update: { role: parsed.data.role },
+      }),
+      prisma.customerInvitation.deleteMany({
+        where: {
+          customerAccountId: parsed.data.accountId,
+          email,
+          acceptedAt: null,
+          restaurantIds: { has: parsed.data.restaurantId },
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          customerUserId: existingUser.id,
+          restaurantId: parsed.data.restaurantId,
+          type: "RESTAURANT_ACCESS_GRANTED",
+          title: "Restaurant access updated by Deniz Ajans",
+        },
+      }),
+    ]);
+    revalidatePath("/dashboard/customers");
+    revalidatePath("/portal");
+    return {
+      error: null,
+      activationPath: null,
+      message: "Access was added to the existing customer account. No activation link is needed.",
+    };
+  }
+
+  const { token, tokenHash } = await generateInvitationToken();
+  await prisma.$transaction(async (tx) => {
+    await tx.customerInvitation.deleteMany({
+      where: {
+        customerAccountId: parsed.data.accountId,
+        email,
+        acceptedAt: null,
+        restaurantIds: { has: parsed.data.restaurantId },
+      },
+    });
+    await tx.customerInvitation.create({
+      data: {
+        tokenHash,
+        email,
+        role: parsed.data.role,
+        restaurantIds: [parsed.data.restaurantId],
+        customerAccountId: parsed.data.accountId,
+        expiresAt: new Date(Date.now() + 7 * 86_400_000),
+      },
+    });
+  });
+  revalidatePath("/dashboard/customers");
+  return { error: null, activationPath: activationUrl(token) };
+}
+
 export async function inviteCustomerStaff(
   _state: CustomerManagementState,
   formData: FormData,
@@ -135,12 +248,63 @@ export async function inviteCustomerStaff(
   }
   const existingUser = await prisma.customerUser.findUnique({
     where: { email: parsed.data.email.toLowerCase() },
-    select: { accountId: true },
+    select: { id: true, accountId: true, isActive: true },
   });
-  if (existingUser && existingUser.accountId !== inviter.accountId) {
+  const recipientMode = invitationRecipientMode(
+    existingUser?.accountId,
+    inviter.accountId,
+  );
+  if (recipientMode === "REJECT_OTHER_WORKSPACE") {
     return {
       error: "That email belongs to another customer workspace",
       activationPath: null,
+    };
+  }
+  if (recipientMode === "GRANT_ACCESS" && existingUser) {
+    if (!existingUser.isActive) {
+      return {
+        error: "That user is suspended. Ask Deniz Ajans to reactivate the account.",
+        activationPath: null,
+      };
+    }
+    await prisma.$transaction([
+      prisma.restaurantMembership.upsert({
+        where: {
+          customerUserId_restaurantId: {
+            customerUserId: existingUser.id,
+            restaurantId: parsed.data.restaurantId,
+          },
+        },
+        create: {
+          customerUserId: existingUser.id,
+          restaurantId: parsed.data.restaurantId,
+          role: parsed.data.role,
+        },
+        update: { role: parsed.data.role },
+      }),
+      prisma.customerInvitation.deleteMany({
+        where: {
+          customerAccountId: inviter.accountId,
+          email: parsed.data.email.toLowerCase(),
+          acceptedAt: null,
+          restaurantIds: { has: parsed.data.restaurantId },
+        },
+      }),
+      prisma.notification.create({
+        data: {
+          customerUserId: existingUser.id,
+          restaurantId: parsed.data.restaurantId,
+          type: "RESTAURANT_ACCESS_GRANTED",
+          title: `Restaurant access granted by ${inviter.email}`,
+        },
+      }),
+    ]);
+    revalidatePath("/portal");
+    revalidatePath("/portal/account");
+    return {
+      error: null,
+      activationPath: null,
+      message: "Access was added to the existing customer account. No activation link is needed.",
     };
   }
   const { token, tokenHash } = await generateInvitationToken();
