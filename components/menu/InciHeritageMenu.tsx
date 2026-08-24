@@ -8,11 +8,12 @@ import {
   Clock3,
 } from "lucide-react";
 import type { MenuData, MenuItem } from "@/lib/menu";
-import { allergenName, formatPrice, isRtl, LANG_LABELS, pick, type Lang } from "@/lib/i18n";
+import { allergenName, formatPrice, isRtl, pick, type Lang } from "@/lib/i18n";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { RestaurantFooter } from "@/components/menu/RestaurantFooter";
 import { themeToCssVars, type ThemeTokens } from "@/lib/themes";
 import { ProgressiveImage } from "@/components/menu/ProgressiveImage";
+import { MenuLanguageSwitcher } from "@/components/menu/MenuLanguageSwitcher";
 import { formatPortion } from "@/lib/portion";
 import {
   readInciNavigation,
@@ -478,23 +479,13 @@ function LanguageSwitch({
   onChange: (lang: Lang) => void;
   light?: boolean;
 }) {
-  if (langs.length < 2) return null;
   return (
-    <div className={`flex self-start rounded-full border p-1 backdrop-blur min-[361px]:self-auto ${light ? "border-white/20 bg-black/20" : "border-[#882634]/15 bg-white"}`}>
-      {langs.map((entry) => (
-        <button
-          key={entry}
-          onClick={() => onChange(entry)}
-          className={`min-h-11 min-w-10 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-            lang === entry
-              ? "bg-[#d5a95d] text-[#3c1017]"
-              : light ? "text-white/75 hover:text-white" : "text-[#882634]/60 hover:text-[#882634]"
-          }`}
-        >
-          {LANG_LABELS[entry]}
-        </button>
-      ))}
-    </div>
+    <MenuLanguageSwitcher
+      languages={langs}
+      language={lang}
+      onChange={onChange}
+      light={light}
+    />
   );
 }
 

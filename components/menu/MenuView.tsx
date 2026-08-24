@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { MenuData } from "@/lib/menu";
-import { type Lang, LANG_LABELS, UI, isRtl, pick } from "@/lib/i18n";
+import { type Lang, UI, isRtl, pick } from "@/lib/i18n";
 import { type ThemeTokens, themeToCssVars } from "@/lib/themes";
 import { ItemCard } from "./ItemCard";
+import { MenuLanguageSwitcher } from "./MenuLanguageSwitcher";
 import { RestaurantFooter } from "./RestaurantFooter";
 import { ProgressiveImage } from "./ProgressiveImage";
 
@@ -104,18 +105,13 @@ function Hero({
       <div className="absolute inset-0" style={{ background: "var(--menu-hero-scrim)" }} />
 
       {enabledLangs.length > 1 && (
-        <div className="absolute top-4 end-4 z-10 flex gap-0.5 rounded-full border border-white/20 bg-black/30 p-1 backdrop-blur-md">
-          {enabledLangs.map((l) => (
-            <button
-              key={l}
-              onClick={() => onLang(l)}
-              className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
-                l === lang ? "bg-white text-black" : "text-white/85 hover:text-white"
-              }`}
-            >
-              {LANG_LABELS[l]}
-            </button>
-          ))}
+        <div className="absolute top-4 end-4 z-10">
+          <MenuLanguageSwitcher
+            languages={enabledLangs}
+            language={lang}
+            onChange={onLang}
+            light
+          />
         </div>
       )}
 
